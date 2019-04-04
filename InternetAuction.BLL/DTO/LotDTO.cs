@@ -21,7 +21,6 @@ namespace InternetAuction.BLL.DTO
         public DateTime FinishTime { get; set; }
         public int StartPrice { get; set; }
         public string OwnerId { get; set; }
-        public int? LastBetId { get; set; }
         public int CategoryId { get; set; }
         public ICollection<ImageDTO> Images { get; set; }
         public ICollection<BetDTO> Bets { get; set; }

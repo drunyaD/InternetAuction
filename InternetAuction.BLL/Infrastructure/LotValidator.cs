@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace InternetAuction.BLL.Services
+namespace InternetAuction.BLL.Infrastructure
 {
-    public class TimeoutControl
+    class LotValidator
     {
     }
 }

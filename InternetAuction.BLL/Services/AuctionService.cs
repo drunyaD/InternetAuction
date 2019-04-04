@@ -31,7 +31,7 @@ namespace InternetAuction.BLL.Services
         {
             Lot lot = Database.Lots.Get(betDTO.LotId);
             User user = await Database.UserManager.FindByIdAsync(betDTO.UserId);
-            Bet lastBet = lot.LastBet;
+            Bet lastBet = lot.Bets.Where(b => b.Value == lot.Bets.Max(bet => bet.Value)).First();
             if (user == null) throw new ValidationException("no user with such id","UserId");
             if (lot == null) throw new ValidationException("no lot with such id","LotId");
             if (betDTO.PlacingTime > lot.FinishTime) throw new ValidationException("time is over", "PlacingTime");
@@ -121,7 +121,7 @@ namespace InternetAuction.BLL.Services
                 throw new ValidationException("No bet with such id", "Id");
             Lot lot = Database.Lots.Get(betDTO.LotId);
             User user = await Database.UserManager.FindByIdAsync(betDTO.UserId);
-            Bet lastBet = lot.LastBet;
+            Bet lastBet = lot.Bets.Where(b => b.Value == lot.Bets.Max(B => B.Value)).First();
             if (user == null) throw new ValidationException("no user with such id", "UserId");
             if (lot == null) throw new ValidationException("no lot with such id", "LotId");
             if (betDTO.PlacingTime > lot.FinishTime) throw new ValidationException("time is over", "PlacingTime");

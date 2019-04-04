@@ -33,13 +33,11 @@ namespace InternetAuction.DAL.Entities
         [Required]
         [ForeignKey("LotOwner")]
         public string OwnerId { get; set; }
-        public int? LastBetId { get; set; }
         [Required]
         [ForeignKey("Category")]
         public int CategoryId { get; set; }
         [Required]
         public virtual User LotOwner { get; set; }
-        public virtual Bet  LastBet { get; set; }
         [Required]
         public virtual Category Category { get; set; }
         public virtual ICollection<Image> Images { get; set; }
