@@ -127,23 +127,5 @@ namespace InternetAuction.DAL.Repositories
             Dispose(true);
             GC.SuppressFinalize(this);
         }
-
-        public void RejectChanges()
-        {
-            foreach (var entry in _db.ChangeTracker.Entries()
-                  .Where(e => e.State != EntityState.Unchanged))
-            {
-                switch (entry.State)
-                {
-                    case EntityState.Added:
-                        entry.State = EntityState.Detached;
-                        break;
-                    case EntityState.Modified:
-                    case EntityState.Deleted:
-                        entry.Reload();
-                        break;
-                }
-            }
-        }
     }
 }

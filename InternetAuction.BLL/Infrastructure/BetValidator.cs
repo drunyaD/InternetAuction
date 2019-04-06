@@ -5,48 +5,50 @@ using System.Text;
 using System.Threading.Tasks;
 using FluentValidation;
 using InternetAuction.BLL.DTO;
+using InternetAuction.BLL.Interfaces;
 using InternetAuction.DAL.Interfaces;
 using InternetAuction.DAL.Entities;
+using FluentValidation.Validators;
+using System.Data.Entity;
 
 namespace InternetAuction.BLL.Infrastructure
 {
-    public class BetValidator: AbstractValidator<BetDTO>
+    public class BetValidator: AbstractValidator<BetDTO>, IBetValidator
     {
         IUnitOfWork Database { get; set; }
         public BetValidator(IUnitOfWork database)
         {
             Database = database;
 
-            RuleFor(bet => bet.LotId).Must((id) =>
-            {
-                Lot lot = database.Lots.Get(id);
-                return lot != null;
-            }).WithMessage("No lot exists with such id");
-
-            RuleFor(bet => bet).Must(NotBeExpired).WithMessage("Must not be expired");
-
             RuleFor(bet => bet.Value).GreaterThan(0);
 
-            RuleFor(bet => bet).Must(HaveMaxValue).WithMessage("Too small value");
+            RuleFor(bet => bet).Custom(ReconcileWithDb);
         }
 
-        protected bool NotBeExpired(BetDTO bet)
+       public void ReconcileWithDb(BetDTO bet, CustomContext context)
         {
-            Lot lot = Database.Lots.Get(bet.LotId);
-            if ((lot != null) || (bet.PlacingTime < lot.FinishTime))
-                return true;
+            var lot = Database.Lots
+                .GetQuery()
+                .Include(l => l.Bets)
+                .FirstOrDefault(l => l.Id == bet.LotId);
+            if (lot == null)
+            {
+                context.AddFailure("LotId", "No lot exists with such id");
+            }
             else
-                return false;
-            
-        }
+            {
+                if (bet.PlacingTime >= lot.FinishTime)
+                {
+                    context.AddFailure("PlacingTime", "Must not be expired");
+                }
 
-        protected bool HaveMaxValue(BetDTO bet)
-        {
-            Lot lot = Database.Lots.Get(bet.LotId);
-            if (lot == null) return false;
-            Bet lastBet = lot.Bets.Where(b => b.Value == lot.Bets.Max(Bet => Bet.Value)).First();
-            if (lastBet != null && bet.Value <= lastBet.Value) return false;
-            else return true;
+                var lastBet = lot.Bets.Where(b => b.Value == lot.Bets.Max(Bet => Bet.Value)).First();
+
+                if (bet.Value <= lastBet.Value)
+                {
+                    context.AddFailure("Value", "Too small bet");
+                }
+            }
         }
     }
 }

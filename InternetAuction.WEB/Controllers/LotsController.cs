@@ -7,15 +7,20 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
+using FluentValidation;
 
 namespace InternetAuction.WEB.Controllers
 {
     public class LotsController : ApiController
     {
         IAuctionService service;
-        public LotsController(IAuctionService serv)
+        ILotValidator createValidator;
+        ILotEditValidator editValidator;
+        public LotsController(IAuctionService serv, ILotValidator createV, ILotEditValidator editV)
         {
             service = serv;
+            createValidator = createV;
+            editValidator = editV;
         }
 
         public HttpResponseMessage GetLot(int lotId)
@@ -29,54 +34,40 @@ namespace InternetAuction.WEB.Controllers
             {
                 return Request.CreateResponse(HttpStatusCode.NotFound, e.Message);
             }
-            catch (Exception)
-            {
-                return Request.CreateResponse(HttpStatusCode.InternalServerError);
-            }
 
         }
 
         public HttpResponseMessage GetLots()
         {
-            try
-            {
+            
                 IEnumerable<LotDTO> lots = service.GetAllLots();
                 return Request.CreateResponse(HttpStatusCode.OK, lots);
-            }
-            catch (Exception)
-            {
-                return Request.CreateResponse(HttpStatusCode.InternalServerError);
-            }
+ 
         }
 
         [HttpPost]
         public HttpResponseMessage CreateLot([FromBody]LotDTO lotDTO)
         {
-            try
+            var validResult = createValidator.Validate(lotDTO);
+            if (!validResult.IsValid)
             {
-                service.CreateLot(lotDTO);
-                HttpResponseMessage response = Request.CreateResponse(HttpStatusCode.Created, lotDTO);
-                response.Headers.Location = new Uri("/api/lots/" + lotDTO.Id);
-                return response;
+                return Request.CreateResponse(HttpStatusCode.BadRequest, validResult.Errors);
             }
-            catch(ValidationException e)
-            {
-                return Request.CreateResponse(HttpStatusCode.BadRequest, e.Message);
-            }
+            service.CreateLot(lotDTO);
+            HttpResponseMessage response = Request.CreateResponse(HttpStatusCode.Created, lotDTO);
+            return response;
         }
 
         [HttpPut]
         public HttpResponseMessage ChangeLot([FromBody]LotDTO lotDTO)
         {
-            try
+            var validResult = editValidator.Validate(lotDTO);
+            if (!validResult.IsValid)
             {
-                service.EditLot(lotDTO);
-                return Request.CreateResponse(HttpStatusCode.OK);
+                return Request.CreateResponse(HttpStatusCode.BadRequest, validResult.Errors);
             }
-            catch (ValidationException e)
-            {
-                return Request.CreateResponse(HttpStatusCode.NotFound, e.Message);
-            }
+            service.EditLot(lotDTO);
+            return Request.CreateResponse(HttpStatusCode.OK);
         }
 
         public HttpResponseMessage DeleteLot(int id)

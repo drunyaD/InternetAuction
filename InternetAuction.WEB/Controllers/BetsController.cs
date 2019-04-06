@@ -7,15 +7,20 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
+using FluentValidation;
 
 namespace InternetAuction.WEB.Controllers
 {
     public class BetsController : ApiController
     {
         IAuctionService service;
-        public BetsController(IAuctionService serv)
+        IBetValidator createValidator;
+        IBetEditValidator editValidator;
+        public BetsController(IAuctionService serv, IBetValidator createV, IBetEditValidator editV)
         {
             service = serv;
+            createValidator = createV;
+            editValidator = editV;
         }
 
         public HttpResponseMessage GetBet(int betId)
@@ -29,55 +34,40 @@ namespace InternetAuction.WEB.Controllers
             {
                 return Request.CreateResponse(HttpStatusCode.NotFound, e.Message);
             }
-            catch (Exception)
-            {
-                return Request.CreateResponse(HttpStatusCode.InternalServerError);
-            }
 
         }
 
         public HttpResponseMessage GetAllBets()
         {
-            try
-            {
+           
                 IEnumerable<BetDTO> bets = service.GetAllBets();
                 return Request.CreateResponse(HttpStatusCode.OK, bets);
-            }
-            catch (Exception)
-            {
-                return Request.CreateResponse(HttpStatusCode.InternalServerError);
-            }
+            
         }
 
         [HttpPost]
         public HttpResponseMessage CreateBet([FromBody]BetDTO betDTO)
         {
-            try
+            var validResult = createValidator.Validate(betDTO);
+            if (!validResult.IsValid)
             {
-                service.CreateBet(betDTO);
-                HttpResponseMessage response = Request.CreateResponse(HttpStatusCode.Created, betDTO);
-                response.Headers.Location = new Uri("/api/bets/" + betDTO.Id);
-                return response;
-
+                return Request.CreateResponse(HttpStatusCode.BadRequest, validResult.Errors);
             }
-            catch(ValidationException e)
-            {
-                return Request.CreateResponse(HttpStatusCode.BadRequest, e.Message);
-            }
+            service.CreateBet(betDTO);
+            HttpResponseMessage response = Request.CreateResponse(HttpStatusCode.Created, betDTO);
+            return response;
         }
 
         [HttpPut]
         public HttpResponseMessage ChangeBet([FromBody]BetDTO betDTO)
         {
-            try
+            var validResult = editValidator.Validate(betDTO);
+            if (!validResult.IsValid)
             {
-                service.EditBet(betDTO);
-                return Request.CreateResponse(HttpStatusCode.OK);
+                return Request.CreateResponse(HttpStatusCode.BadRequest, validResult.Errors);
             }
-            catch (ValidationException e)
-            {
-                return Request.CreateResponse(HttpStatusCode.NotFound, e.Message);
-            }
+            service.EditBet(betDTO);
+            return Request.CreateResponse(HttpStatusCode.OK);
         }
 
         public HttpResponseMessage DeleteBet(int betId)

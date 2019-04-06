@@ -7,15 +7,20 @@ using System.Web.Http;
 using InternetAuction.BLL.Interfaces;
 using InternetAuction.BLL.DTO;
 using InternetAuction.BLL.Infrastructure;
+using FluentValidation;
 
 namespace InternetAuction.WEB.Controllers
 {
-    public class СategoriesController : ApiController
+    public class CategoriesController : ApiController
     {
         IAuctionService service;
-        public СategoriesController(IAuctionService serv)
+        ICategoryValidator createValidator;
+        ICategoryEditValidator editValidator;
+        public CategoriesController(IAuctionService serv, ICategoryValidator createV, ICategoryEditValidator editV)
         {
             service = serv;
+            createValidator = createV;
+            editValidator = editV;
         }
 
         public HttpResponseMessage GetCategory(int categoryId)
@@ -28,55 +33,43 @@ namespace InternetAuction.WEB.Controllers
             catch (ArgumentException e) {
                 return Request.CreateResponse(HttpStatusCode.NotFound, e.Message);
             }
-            catch (Exception)
-            {
-                return Request.CreateResponse(HttpStatusCode.InternalServerError);
-            }
             
         }
 
         public HttpResponseMessage GetCategories()
         {
-            try
-            {
+            
+            
                 IEnumerable<CategoryDTO> categories = service.GetAllCategories();
                 return Request.CreateResponse(HttpStatusCode.OK, categories);
-            }
-            catch(Exception)
-            {
-                return Request.CreateResponse(HttpStatusCode.InternalServerError);
-            }
+            
         }
 
         [HttpPost]
         public HttpResponseMessage CreateCategory([FromBody]CategoryDTO categoryDTO)
-        {
-            try
+        {       
+            var validResult = createValidator.Validate(categoryDTO);
+            if (!validResult.IsValid)
             {
-                service.CreateCategory(categoryDTO);
-                HttpResponseMessage response = Request.CreateResponse(HttpStatusCode.Created, categoryDTO);
-                response.Headers.Location = new Uri("/api/categories/" + categoryDTO.Id);
-                return response;
-
-            }
-            catch
-            {
-                return Request.CreateResponse(HttpStatusCode.BadRequest, "this category already exists");
-            }
+                return Request.CreateResponse(HttpStatusCode.BadRequest, validResult.Errors);
+            }   
+            service.CreateCategory(categoryDTO);
+            HttpResponseMessage response = Request.CreateResponse(HttpStatusCode.Created, categoryDTO);
+            return response;       
         }
 
         [HttpPut]
         public HttpResponseMessage ChangeCategory([FromBody]CategoryDTO categoryDTO)
         {
-            try
+
+            var validResult = editValidator.Validate(categoryDTO);
+            if (!validResult.IsValid)
             {
-                service.EditCategory(categoryDTO);
-                return Request.CreateResponse(HttpStatusCode.OK);
+                return Request.CreateResponse(HttpStatusCode.BadRequest, validResult.Errors);
             }
-            catch(ValidationException e)
-            {
-                return Request.CreateResponse(HttpStatusCode.NotFound, e.Message);
-            }
+            service.EditCategory(categoryDTO);
+            return Request.CreateResponse(HttpStatusCode.OK);
+            
         }
 
         public HttpResponseMessage DeleteCategory(int id)

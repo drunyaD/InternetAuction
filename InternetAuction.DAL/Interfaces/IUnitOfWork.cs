@@ -18,7 +18,6 @@ namespace InternetAuction.DAL.Interfaces
         IRepository<Image> Images { get; }
         IRepository<Lot> Lots { get; }
         void Save();
-        void RejectChanges();
     }
 }
 

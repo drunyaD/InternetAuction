@@ -14,5 +14,6 @@ namespace InternetAuction.DAL.Interfaces
         void Create(T item);
         void Update(T item);
         void Delete(int id);
+        IQueryable<T> GetQuery();
     }
 }

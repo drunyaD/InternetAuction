@@ -26,13 +26,13 @@ namespace InternetAuction.DAL.Repositories
             public void Update(T item)
             {
                 _context.Entry(item).State = EntityState.Modified;
-            }
+        }
 
             public void Delete(int id)
             {
+            //delete (T item)?
                 T item = _dbSet.Find(id);
-                if (item != null)
-                    _dbSet.Remove(item);
+                _dbSet.Remove(item);
             }
 
             public IEnumerable<T> Find(Func<T, bool> predicate)
@@ -43,6 +43,11 @@ namespace InternetAuction.DAL.Repositories
             public T Get(int id)
             {
                 return _dbSet.Find(id);
+            }
+
+            public IQueryable<T> GetQuery()
+            {
+                return _dbSet.AsQueryable();
             }
 
             public IEnumerable<T> GetAll()

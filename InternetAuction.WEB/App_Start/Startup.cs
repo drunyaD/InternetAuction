@@ -15,10 +15,10 @@ namespace InternetAuction.WEB.App_Start
     public class Startup
     {
         IUserService userService;
-        public void Configuration(IAppBuilder app, IUserService serv)
+        public void Configuration(IAppBuilder app)
         {
 
-            app.CreatePerOwinContext(() => serv);
+            //app.CreatePerOwinContext(() => serv);
             app.UseCookieAuthentication(new CookieAuthenticationOptions
             {
                 AuthenticationType = DefaultAuthenticationTypes.ApplicationCookie,

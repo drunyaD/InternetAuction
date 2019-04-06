@@ -9,6 +9,10 @@ using InternetAuction.DAL.Entities;
 using InternetAuction.BLL.Interfaces;
 using InternetAuction.DAL.Interfaces;
 using InternetAuction.BLL.Infrastructure;
+using FluentValidation;
+using FluentValidation.Results;
+using System.Data.Entity;
+
 namespace InternetAuction.BLL.Services
 {
     public class AuctionService : IAuctionService
@@ -29,14 +33,10 @@ namespace InternetAuction.BLL.Services
 
         public async void CreateBet(BetDTO betDTO)
         {
+            //betDTO.PlacingTime = DateTime.Now;  
+
             Lot lot = Database.Lots.Get(betDTO.LotId);
             User user = await Database.UserManager.FindByIdAsync(betDTO.UserId);
-            Bet lastBet = lot.Bets.Where(b => b.Value == lot.Bets.Max(bet => bet.Value)).First();
-            if (user == null) throw new ValidationException("no user with such id","UserId");
-            if (lot == null) throw new ValidationException("no lot with such id","LotId");
-            if (betDTO.PlacingTime > lot.FinishTime) throw new ValidationException("time is over", "PlacingTime");
-            if (betDTO.Value < 0) throw new ValidationException("value < 0","Value");
-            if (lastBet != null && betDTO.Value <= lastBet.Value) throw new ValidationException("too small value","Value");
             Database.Bets.Create(new Bet
             {
                 Value = betDTO.Value,
@@ -47,27 +47,26 @@ namespace InternetAuction.BLL.Services
                 User = user
             });
             Database.Save();
+
         }
 
         public void CreateCategory(CategoryDTO categoryDTO)
         {
             Database.Categories.Create(new Category {Name = categoryDTO.Name});
+            Database.Save();
         }
 
         public async void CreateLot(LotDTO lotDTO)
         {
-            DateTime nowTime = DateTime.Now;
-            if (lotDTO.FinishTime < nowTime) throw new ValidationException("finishTime < current time", "FinishTime");
-            if (lotDTO.StartPrice < 0) throw new ValidationException("startprice < 0", "StartPrice");
+
+           // DateTime nowTime = DateTime.Now;
             Category category = Database.Categories.Get(lotDTO.CategoryId);
-            if (category == null) throw new ValidationException("no category with such id", "Category");
             User owner =  await Database.UserManager.FindByIdAsync(lotDTO.OwnerId);
-            if (owner == null) throw new ValidationException("no user with such id", "OwnerId");
             Lot lot = new Lot()
             {
                 Name = lotDTO.Name,
                 Description = lotDTO.Description,
-                StartTime = nowTime,
+                StartTime = lotDTO.StartTime,
                 FinishTime = lotDTO.FinishTime,
                 StartPrice = lotDTO.StartPrice,
                 OwnerId = lotDTO.OwnerId,
@@ -116,17 +115,9 @@ namespace InternetAuction.BLL.Services
 
         public async void EditBet(BetDTO betDTO)
         {
-            Bet bet = Database.Bets.Get(betDTO.Id);
-            if (bet == null)
-                throw new ValidationException("No bet with such id", "Id");
-            Lot lot = Database.Lots.Get(betDTO.LotId);
+
+            Lot lot = Database.Lots.GetQuery().Include(l => l.Bets).FirstOrDefault(l => l.Id == betDTO.LotId);
             User user = await Database.UserManager.FindByIdAsync(betDTO.UserId);
-            Bet lastBet = lot.Bets.Where(b => b.Value == lot.Bets.Max(B => B.Value)).First();
-            if (user == null) throw new ValidationException("no user with such id", "UserId");
-            if (lot == null) throw new ValidationException("no lot with such id", "LotId");
-            if (betDTO.PlacingTime > lot.FinishTime) throw new ValidationException("time is over", "PlacingTime");
-            if (betDTO.Value < 0) throw new ValidationException("value < 0", "Value");
-            if (lastBet != null && betDTO.Value <= lastBet.Value) throw new ValidationException("too small value", "Value");
             Bet editedBet = new Bet
             {
                 Id = betDTO.Id,
@@ -143,31 +134,22 @@ namespace InternetAuction.BLL.Services
 
         public void EditCategory(CategoryDTO categoryDTO)
         {
-            Category category = Database.Categories.Get(categoryDTO.Id);
-            if (category == null)
-                throw new ValidationException("no category with such id", "Id");
+            
             Database.Categories.Update(new Category { Id = categoryDTO.Id, Name = categoryDTO.Name });
             Database.Save();
         }
 
         public async void EditLot(LotDTO lotDTO)
         {
-            Lot lot = Database.Lots.Get(lotDTO.Id);
-            if (lot == null)
-                throw new ValidationException("no lot with such id", "Id");
-            DateTime nowTime = DateTime.Now;
-            if (lotDTO.FinishTime < nowTime) throw new ValidationException("finishTime < current time", "FinishTime");
-            if (lotDTO.StartPrice < 0) throw new ValidationException("startprice < 0", "StartPrice");
+            
             Category category = Database.Categories.Get(lotDTO.CategoryId);
-            if (category == null) throw new ValidationException("no category with such id", "Category");
             User owner = await Database.UserManager.FindByIdAsync(lotDTO.OwnerId);
-            if (owner == null) throw new ValidationException("no user with such id", "OwnerId");
-            Lot editedLot = new Lot()
+            Lot lot = new Lot()
             {
                 Id = lotDTO.Id,
                 Name = lotDTO.Name,
                 Description = lotDTO.Description,
-                StartTime = nowTime,
+                StartTime = lotDTO.StartTime,
                 FinishTime = lotDTO.FinishTime,
                 StartPrice = lotDTO.StartPrice,
                 OwnerId = lotDTO.OwnerId,
