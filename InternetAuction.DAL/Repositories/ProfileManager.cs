@@ -27,5 +27,10 @@ namespace InternetAuction.DAL.Repositories
         {
             Database.Dispose();
         }
+
+        public Profile Get(string id)
+        {
+            return Database.Profiles.Find(id);
+        }
     }
 }

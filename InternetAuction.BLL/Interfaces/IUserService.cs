@@ -6,13 +6,14 @@ using System.Text;
 using System.Threading.Tasks;
 using InternetAuction.BLL.DTO;
 using InternetAuction.BLL.Infrastructure;
+using InternetAuction.DAL.Entities;
+using Microsoft.AspNet.Identity;
 
 namespace InternetAuction.BLL.Interfaces
 {
     public interface IUserService: IDisposable
     {
-        Task<OperationDetails> Create(UserDTO userDto);
-        Task<ClaimsIdentity> Authenticate(UserDTO userDto);
-        Task SetInitialData(UserDTO adminDto, List<string> roles);
+        Task<IdentityResult> RegisterUser(UserDTO userDTO);
+        Task<UserDTO> FindUser(string userName, string password);
     }
 }

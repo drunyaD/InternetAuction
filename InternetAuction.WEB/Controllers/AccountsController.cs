@@ -8,107 +8,87 @@ using Microsoft.Owin.Security;
 using Microsoft.AspNet.Identity.Owin;
 using InternetAuction.BLL.Interfaces;
 using System.Web;
-using System.Web.Mvc;
 using System.Security.Claims;
+using InternetAuction.BLL.DTO;
+using System.Threading.Tasks;
+using InternetAuction.WEB.Models;
+using Microsoft.AspNet.Identity;
 
 namespace InternetAuction.WEB.Controllers
 {
-    public class AccountsController : ApiController
+    public class AccountController : ApiController
     {
-        /*
-        private IUserService UserService
+        private IUserService userService;
+
+        public AccountController(IUserService service)
         {
-            get
+            userService = service;
+        }
+
+        [AllowAnonymous]
+        [Route("api/Accounts/Register")]
+        public async Task<IHttpActionResult> Register(RegisterModel registerModel)
+        {
+            if (!ModelState.IsValid)
             {
-                return HttpContext.Current.GetOwinContext().GetUserManager<IUserService>();
+                return BadRequest(ModelState);
             }
-        }
 
-        private IAuthenticationManager AuthenticationManager
-        {
-            get
+            IdentityResult result = await userService.RegisterUser(new UserDTO
+            {Name = registerModel.Name,
+            UserName = registerModel.UserName,
+            Email = registerModel.Email,
+            Password = registerModel.Password,
+            Role = "user"
+            });
+
+            IHttpActionResult errorResult = GetErrorResult(result);
+
+            if (errorResult != null)
             {
-                return HttpContext.Current.GetOwinContext().Authentication;
+                return errorResult;
             }
+
+            return Ok();
         }
 
-        public ActionResult Login()
+        protected override void Dispose(bool disposing)
         {
-            return View();
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Login(LoginModel model)
-        {
-            await SetInitialDataAsync();
-            if (ModelState.IsValid)
+            if (disposing)
             {
-                UserDTO userDto = new UserDTO { Email = model.Email, Password = model.Password };
-                ClaimsIdentity claim = await UserService.Authenticate(userDto);
-                if (claim == null)
+                userService.Dispose();
+            }
+
+            base.Dispose(disposing);
+        }
+
+        private IHttpActionResult GetErrorResult(IdentityResult result)
+        {
+            if (result == null)
+            {
+                return InternalServerError();
+            }
+
+            if (!result.Succeeded)
+            {
+                if (result.Errors != null)
                 {
-                    ModelState.AddModelError("", "Неверный логин или пароль.");
-                }
-                else
-                {
-                    AuthenticationManager.SignOut();
-                    AuthenticationManager.SignIn(new AuthenticationProperties
+                    foreach (string error in result.Errors)
                     {
-                        IsPersistent = true
-                    }, claim);
-                    return RedirectToAction("Index", "Home");
+                        ModelState.AddModelError("", error);
+                    }
                 }
-            }
-            return View(model);
-        }
 
-        public ActionResult Logout()
-        {
-            AuthenticationManager.SignOut();
-            return RedirectToAction("Index", "Home");
-        }
-
-        public ActionResult Register()
-        {
-            return View();
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Register(RegisterModel model)
-        {
-            await SetInitialDataAsync();
-            if (ModelState.IsValid)
-            {
-                UserDTO userDto = new UserDTO
+                if (ModelState.IsValid)
                 {
-                    Email = model.Email,
-                    Password = model.Password,
-                    Address = model.Address,
-                    Name = model.Name,
-                    Role = "user"
-                };
-                OperationDetails operationDetails = await UserService.Create(userDto);
-                if (operationDetails.Succedeed)
-                    return View("SuccessRegister");
-                else
-                    ModelState.AddModelError(operationDetails.Property, operationDetails.Message);
+                    // No ModelState errors are available to send, so just return an empty BadRequest.
+                    return BadRequest();
+                }
+
+                return BadRequest(ModelState);
             }
-            return View(model);
+
+            return null;
         }
-        private async Task SetInitialDataAsync()
-        {
-            await UserService.SetInitialData(new UserDTO
-            {
-                Email = "somemail@mail.ru",
-                UserName = "somemail@mail.ru",
-                Password = "ad46D_ewr3",
-                Name = "Семен Семенович Горбунков",
-                Address = "ул. Спортивная, д.30, кв.75",
-                Role = "admin",
-            }, new List<string> { "user", "admin" });
-        }
-        */
     }
 }

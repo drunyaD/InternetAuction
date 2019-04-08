@@ -22,6 +22,45 @@ namespace InternetAuction.BLL.Services
             Database = uow;
         }
 
+
+        public async Task<IdentityResult> RegisterUser(UserDTO userDTO)
+        {
+            User user = new User
+            {
+                UserName = userDTO.UserName,
+                Email = userDTO.Email
+            };
+            var result = await Database.UserManager.CreateAsync(user, userDTO.Password);
+            Profile clientProfile = new Profile { Id = user.Id, Name = userDTO.Name };
+            Database.ProfileManager.Create(clientProfile);
+            Database.Save();
+            return result;
+        }
+
+        public async Task<UserDTO> FindUser(string userName, string password)
+        {
+            User user = await Database.UserManager.FindAsync(userName, password);
+            if (user == null) throw new ArgumentException("no user exists with such id");
+            return new UserDTO {
+                Id = user.Id,
+                Email = user.Email,
+                UserName = user.UserName,
+                Name = Database.ProfileManager.Get(user.Id).Name,
+                Password = password
+            };
+        }
+
+        public void Dispose()
+        {
+            Database.Dispose();
+        }
+
+        /*
+        public UserService(IUnitOfWork uow)
+        {
+            Database = uow;
+        }
+
         public async Task<OperationDetails> Create(UserDTO userDto)
         {
             User user = await Database.UserManager.FindByEmailAsync(userDto.Email);
@@ -75,6 +114,6 @@ namespace InternetAuction.BLL.Services
         public void Dispose()
         {
             Database.Dispose();
-        }
+        }*/
     }
 }

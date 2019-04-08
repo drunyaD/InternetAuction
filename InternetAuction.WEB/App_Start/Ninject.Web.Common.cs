@@ -17,6 +17,7 @@ namespace InternetAuction.WEB.App_Start
 
     public static class NinjectWebCommon 
     {
+
         private static readonly Bootstrapper bootstrapper = new Bootstrapper();
 
         /// <summary>

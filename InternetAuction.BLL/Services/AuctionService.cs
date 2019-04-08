@@ -31,6 +31,7 @@ namespace InternetAuction.BLL.Services
             Database = uow;
         }
 
+
         public async void CreateBet(BetDTO betDTO)
         {
             //betDTO.PlacingTime = DateTime.Now;  

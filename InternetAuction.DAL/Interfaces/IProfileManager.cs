@@ -10,5 +10,6 @@ namespace InternetAuction.DAL.Interfaces
     public interface IProfileManager: IDisposable
     {
         void Create(Profile profile);
+        Profile Get(string id);
     }
 }

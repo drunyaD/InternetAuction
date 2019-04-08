@@ -11,6 +11,7 @@ using FluentValidation;
 
 namespace InternetAuction.WEB.Controllers
 {
+    [Authorize]
     public class CategoriesController : ApiController
     {
         IAuctionService service;
@@ -22,9 +23,9 @@ namespace InternetAuction.WEB.Controllers
             createValidator = createV;
             editValidator = editV;
         }
-
         public HttpResponseMessage GetCategory(int categoryId)
         {
+            
             try
             {
                 CategoryDTO category = service.GetCategory(categoryId);
@@ -35,7 +36,7 @@ namespace InternetAuction.WEB.Controllers
             }
             
         }
-
+        
         public HttpResponseMessage GetCategories()
         {
             
