@@ -10,7 +10,6 @@ namespace InternetAuction.DAL.Entities
 {
     public class User : IdentityUser
     {
-        public virtual Profile Profile { get; set; }
         public virtual ICollection<Lot> Lots { get; set; }
         public virtual ICollection<Bet> Bets { get; set; }
 

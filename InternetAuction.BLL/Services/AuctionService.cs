@@ -17,13 +17,14 @@ namespace InternetAuction.BLL.Services
 {
     public class AuctionService : IAuctionService
     {
+        /*
         static IMapper imagetoDTO = new MapperConfiguration(cfg => cfg.CreateMap<Image, ImageDTO>()).CreateMapper();
         static IMapper betToDTO = new MapperConfiguration(cfg => cfg.CreateMap<Bet, BetDTO>()).CreateMapper();
         static IMapper categoryToDTO = new MapperConfiguration(cfg => cfg.CreateMap<Category, CategoryDTO>()).CreateMapper();
         static IMapper lotToDTO = new MapperConfiguration(cfg => cfg.CreateMap<Lot, LotDTO>()
         .ForMember(lot => lot.Images, lot => lot.MapFrom(e => imagetoDTO.Map<IEnumerable<Image>, IEnumerable<ImageDTO>>(e.Images)))
         .ForMember(lot => lot.Bets, lot => lot.MapFrom(e => imagetoDTO.Map<IEnumerable<Bet>, IEnumerable<BetDTO>>(e.Bets)))).CreateMapper();
-
+*/
         IUnitOfWork Database { get; set; }
 
         public AuctionService(IUnitOfWork uow)
@@ -180,7 +181,7 @@ namespace InternetAuction.BLL.Services
 
         public IEnumerable<CategoryDTO> GetAllCategories()
         {
-            return categoryToDTO.Map<IEnumerable<Category>, IEnumerable<CategoryDTO>>(
+            return Mapper.Map<IEnumerable<Category>, IEnumerable<CategoryDTO>>(
                 Database
                 .Categories
                 .GetAll()
@@ -189,7 +190,7 @@ namespace InternetAuction.BLL.Services
 
         public IEnumerable<LotDTO> GetAllLots()
         {
-            return lotToDTO.Map<IEnumerable<Lot>, IEnumerable<LotDTO>>(
+            return Mapper.Map<IEnumerable<Lot>, IEnumerable<LotDTO>>(
                 Database
                 .Lots
                 .GetAll()
@@ -200,28 +201,28 @@ namespace InternetAuction.BLL.Services
         {
             var bet = Database.Bets.Get(betId);
             if (bet == null) throw new ArgumentException("no bet with such id");
-            return betToDTO.Map<Bet, BetDTO>(bet);
+            return Mapper.Map<Bet, BetDTO>(bet);
         }
 
         public CategoryDTO GetCategory(int categoryId)
         {
             var category = Database.Categories.Get(categoryId);
             if (category == null) throw new ArgumentException("no category with such id");
-            return categoryToDTO.Map<Category, CategoryDTO>(category);
+            return Mapper.Map<Category, CategoryDTO>(category);
         }
 
         public ImageDTO GetImage(int imageId)
         {
             var image = Database.Images.Get(imageId);
             if (image == null) throw new ArgumentException("no image with such id");
-            return imagetoDTO.Map<Image, ImageDTO>(image);
+            return Mapper.Map<Image, ImageDTO>(image);
         }
 
         public LotDTO GetLot(int lotId)
         {
             var lot = Database.Lots.Get(lotId);
             if (lot == null) throw new ArgumentException("No lot with such id");
-            return lotToDTO.Map<Lot, LotDTO>(lot);
+            return Mapper.Map<Lot, LotDTO>(lot);
         }
 
         public void Dispose()
@@ -233,7 +234,7 @@ namespace InternetAuction.BLL.Services
         {
             var category = Database.Categories.Get(categoryId);
             if (category == null) throw new ArgumentException("No category with such id");
-            return lotToDTO.Map<IEnumerable<Lot>, List<LotDTO>>(
+            return Mapper.Map<IEnumerable<Lot>, List<LotDTO>>(
                 Database
                 .Lots
                 .Find(l => l.CategoryId == categoryId)
@@ -244,7 +245,7 @@ namespace InternetAuction.BLL.Services
         {
             Lot lot = Database.Lots.Get(lotId);
             if (lot == null) throw new ArgumentException("No lot with such id");
-            return betToDTO.Map<IEnumerable<Bet>, IEnumerable<BetDTO>>(
+            return Mapper.Map<IEnumerable<Bet>, IEnumerable<BetDTO>>(
                 Database
                 .Bets
                 .Find(b => b.LotId == lotId)
@@ -253,7 +254,7 @@ namespace InternetAuction.BLL.Services
 
         public IEnumerable<BetDTO> GetAllBets()
         {
-            return betToDTO.Map<IEnumerable<Bet>, IEnumerable<BetDTO>>(
+            return Mapper.Map<IEnumerable<Bet>, IEnumerable<BetDTO>>(
                 Database
                 .Bets
                 .GetAll()

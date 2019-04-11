@@ -11,6 +11,7 @@ using FluentValidation;
 
 namespace InternetAuction.WEB.Controllers
 {
+    [Authorize]
     public class LotsController : ApiController
     {
         IAuctionService service;
@@ -22,7 +23,7 @@ namespace InternetAuction.WEB.Controllers
             createValidator = createV;
             editValidator = editV;
         }
-
+        [AllowAnonymous]
         public HttpResponseMessage GetLot(int lotId)
         {
             try
@@ -36,7 +37,7 @@ namespace InternetAuction.WEB.Controllers
             }
 
         }
-
+        [AllowAnonymous]
         public HttpResponseMessage GetLots()
         {
             
@@ -46,6 +47,7 @@ namespace InternetAuction.WEB.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles ="user")]
         public HttpResponseMessage CreateLot([FromBody]LotDTO lotDTO)
         {
             var validResult = createValidator.Validate(lotDTO);
@@ -59,6 +61,7 @@ namespace InternetAuction.WEB.Controllers
         }
 
         [HttpPut]
+        [Authorize(Roles ="administrator, moderator")]
         public HttpResponseMessage ChangeLot([FromBody]LotDTO lotDTO)
         {
             var validResult = editValidator.Validate(lotDTO);
@@ -69,7 +72,7 @@ namespace InternetAuction.WEB.Controllers
             service.EditLot(lotDTO);
             return Request.CreateResponse(HttpStatusCode.OK);
         }
-
+        [Authorize(Roles ="administrator, moderator")]
         public HttpResponseMessage DeleteLot(int id)
         {
             try
@@ -82,7 +85,7 @@ namespace InternetAuction.WEB.Controllers
                 return Request.CreateResponse(HttpStatusCode.NotFound, e.Message);
             }
         }
-
+        [AllowAnonymous]
         [Route("api/lots/{id}/bets")]
         public HttpResponseMessage GetBetsByLot(int lotId)
         {

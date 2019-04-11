@@ -6,8 +6,6 @@ using System.Web;
 using InternetAuction.BLL.Interfaces;
 using InternetAuction.BLL.Services;
 using InternetAuction.BLL.Infrastructure;
-using InternetAuction.WEB.Interfaces;
-using InternetAuction.WEB.Providers;
 using Microsoft.Owin.Security.OAuth;
 
 namespace InternetAuction.WEB.Utils
@@ -25,8 +23,6 @@ namespace InternetAuction.WEB.Utils
             Bind<ILotValidator>().To<LotValidator>();
             Bind<ILotEditValidator>().To<LotEditValidator>();
             Bind<IImageValidator>().To<ImageValidator>();
-            Bind<IOAuthAuthorizationServerOptions>().To<MyOAuthAuthorizationServerOptions>();
-            Bind<IOAuthAuthorizationServerProvider>().To<SimpleAuthorizationServerProvider>();
         }
     }
 }

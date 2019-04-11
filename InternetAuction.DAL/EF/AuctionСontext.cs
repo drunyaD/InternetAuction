@@ -16,7 +16,6 @@ namespace InternetAuction.DAL.EF
         public DbSet<Bet> Bets { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Image> Images { get; set; }
-        public DbSet<Profile> Profiles { get; set; }
 
         public AuctionContext(string connectionString) : base(connectionString) { }
         protected override void OnModelCreating(DbModelBuilder modelBuilder)

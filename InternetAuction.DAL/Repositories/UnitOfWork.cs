@@ -22,7 +22,6 @@ namespace InternetAuction.DAL.Repositories
         private Repository<Lot> _lotRepository;
         private AppUserManager _userManager;
         private AppRoleManager _roleManager;
-        private IProfileManager _profileManager;
 
         public UnitOfWork(string connectionString)  
         {
@@ -81,15 +80,6 @@ namespace InternetAuction.DAL.Repositories
             }
         }
 
-        public IProfileManager ProfileManager
-        {
-            get
-            {
-                if (_profileManager == null)
-                    _profileManager = new ProfileManager(_db);
-                return _profileManager;
-            }
-        }
 
         public AppRoleManager RoleManager
         {
@@ -116,7 +106,6 @@ namespace InternetAuction.DAL.Repositories
                     _db.Dispose();
                     _userManager.Dispose();
                     _roleManager.Dispose();
-                    _profileManager.Dispose();
                 }
                 _disposed = true;
             }

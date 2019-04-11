@@ -11,7 +11,6 @@ namespace InternetAuction.DAL.Interfaces
     public interface IUnitOfWork : IDisposable
     {
         AppUserManager UserManager { get; }
-        IProfileManager ProfileManager { get; }
         AppRoleManager RoleManager { get; }
         IRepository<Bet> Bets { get; }
         IRepository<Category> Categories { get; }

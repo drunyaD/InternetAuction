@@ -8,6 +8,7 @@ using InternetAuction.BLL.Interfaces;
 using InternetAuction.BLL.DTO;
 using InternetAuction.BLL.Infrastructure;
 using FluentValidation;
+using System.Web;
 
 namespace InternetAuction.WEB.Controllers
 {
@@ -23,9 +24,9 @@ namespace InternetAuction.WEB.Controllers
             createValidator = createV;
             editValidator = editV;
         }
+        [AllowAnonymous]
         public HttpResponseMessage GetCategory(int categoryId)
-        {
-            
+        {   
             try
             {
                 CategoryDTO category = service.GetCategory(categoryId);
@@ -36,16 +37,15 @@ namespace InternetAuction.WEB.Controllers
             }
             
         }
-        
+        [AllowAnonymous]
         public HttpResponseMessage GetCategories()
         {
             
-            
-                IEnumerable<CategoryDTO> categories = service.GetAllCategories();
-                return Request.CreateResponse(HttpStatusCode.OK, categories);
+            IEnumerable<CategoryDTO> categories = service.GetAllCategories();
+            return Request.CreateResponse(HttpStatusCode.OK, categories);
             
         }
-
+        [Authorize(Roles ="administrator, moderator")]
         [HttpPost]
         public HttpResponseMessage CreateCategory([FromBody]CategoryDTO categoryDTO)
         {       
@@ -58,7 +58,7 @@ namespace InternetAuction.WEB.Controllers
             HttpResponseMessage response = Request.CreateResponse(HttpStatusCode.Created, categoryDTO);
             return response;       
         }
-
+        [Authorize(Roles ="administrator, moderator")]
         [HttpPut]
         public HttpResponseMessage ChangeCategory([FromBody]CategoryDTO categoryDTO)
         {
@@ -72,7 +72,7 @@ namespace InternetAuction.WEB.Controllers
             return Request.CreateResponse(HttpStatusCode.OK);
             
         }
-
+        [Authorize(Roles ="administrator, moderator")]
         public HttpResponseMessage DeleteCategory(int id)
         {
             try
@@ -85,7 +85,7 @@ namespace InternetAuction.WEB.Controllers
                 return Request.CreateResponse(HttpStatusCode.NotFound, e.Message);
             }
         }
-
+        [AllowAnonymous]
         [Route("api/categories/{id}/lots")]
         public HttpResponseMessage GetLotsByCategory(int categoryId)
         {

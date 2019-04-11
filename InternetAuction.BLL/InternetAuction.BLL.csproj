@@ -89,6 +89,7 @@
     <Compile Include="DTO\ImageDTO.cs" />
     <Compile Include="DTO\LotDTO.cs" />
     <Compile Include="DTO\UserDTO.cs" />
+    <Compile Include="Infrastructure\AutoMapperConfig.cs" />
     <Compile Include="Infrastructure\BetEditValidator.cs" />
     <Compile Include="Infrastructure\BetValidator.cs" />
     <Compile Include="Infrastructure\CategoryEditValidator.cs" />

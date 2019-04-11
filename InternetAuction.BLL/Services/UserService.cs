@@ -10,11 +10,15 @@ using InternetAuction.BLL.DTO;
 using InternetAuction.DAL.Entities;
 using System.Security.Claims;
 using Microsoft.AspNet.Identity;
+using AutoMapper;
 
 namespace InternetAuction.BLL.Services
 {
     public class UserService : IUserService
     {
+        //static IMapper usertoDTO = new MapperConfiguration(cfg => cfg.CreateMap<User, UserDTO>()
+        //.ForMember(u => u.Role, u => u.MapFrom(e => e.Roles.First()))).CreateMapper();
+
         IUnitOfWork Database { get; set; }
 
         public UserService(IUnitOfWork uow)
@@ -22,98 +26,78 @@ namespace InternetAuction.BLL.Services
             Database = uow;
         }
 
-
-        public async Task<IdentityResult> RegisterUser(UserDTO userDTO)
+        public void Create(UserDTO userDto)
         {
-            User user = new User
-            {
-                UserName = userDTO.UserName,
-                Email = userDTO.Email
-            };
-            var result = await Database.UserManager.CreateAsync(user, userDTO.Password);
-            Profile clientProfile = new Profile { Id = user.Id, Name = userDTO.Name };
-            Database.ProfileManager.Create(clientProfile);
-            Database.Save();
-            return result;
-        }
-
-        public async Task<UserDTO> FindUser(string userName, string password)
-        {
-            User user = await Database.UserManager.FindAsync(userName, password);
-            if (user == null) throw new ArgumentException("no user exists with such id");
-            return new UserDTO {
-                Id = user.Id,
-                Email = user.Email,
-                UserName = user.UserName,
-                Name = Database.ProfileManager.Get(user.Id).Name,
-                Password = password
-            };
-        }
-
-        public void Dispose()
-        {
-            Database.Dispose();
-        }
-
-        /*
-        public UserService(IUnitOfWork uow)
-        {
-            Database = uow;
-        }
-
-        public async Task<OperationDetails> Create(UserDTO userDto)
-        {
-            User user = await Database.UserManager.FindByEmailAsync(userDto.Email);
+            User user = Database.UserManager.FindByEmail(userDto.Email);
             if (user == null)
             {
                 user = new User { Email = userDto.Email, UserName = userDto.UserName };
-                var result = await Database.UserManager.CreateAsync(user, userDto.Password);
+                var result = Database.UserManager.Create(user, userDto.Password);
                 if (result.Errors.Count() > 0)
-                    return new OperationDetails(false, result.Errors.FirstOrDefault(), "");
+                    throw new Exception(result.Errors.FirstOrDefault());
                 // добавляем роль
-                await Database.UserManager.AddToRoleAsync(user.Id, userDto.Role);
-                // создаем профиль клиента
-                Profile clientProfile = new Profile { Id = user.Id, Name = userDto.Name };
-                Database.ProfileManager.Create(clientProfile);
+                Database.UserManager.AddToRole(user.Id, userDto.Role);
                 Database.Save();
-                return new OperationDetails(true, "Регистрация успешно пройдена", "");
             }
             else
             {
-                return new OperationDetails(false, "Пользователь с таким логином уже существует", "Email");
+                throw new Exception("this user already exists");
             }
         }
 
-        public async Task<ClaimsIdentity> Authenticate(UserDTO userDto)
+        public ClaimsIdentity Authenticate(UserDTO userDto)
         {
             ClaimsIdentity claim = null;
             // находим пользователя
-            User user = await Database.UserManager.FindAsync(userDto.Email, userDto.Password);
+            User user = Database.UserManager.Find(userDto.UserName, userDto.Password);
             // авторизуем его и возвращаем объект ClaimsIdentity
             if (user != null)
-                claim = await Database.UserManager.CreateIdentityAsync(user,
+                claim = Database.UserManager.CreateIdentity(user,
                                             DefaultAuthenticationTypes.ApplicationCookie);
             return claim;
         }
 
         // начальная инициализация бд
-        public async Task SetInitialData(UserDTO adminDto, List<string> roles)
+        public void SetInitialData(UserDTO adminDto, List<string> roles)
         {
             foreach (string roleName in roles)
             {
-                var role = await Database.RoleManager.FindByNameAsync(roleName);
+                var role = Database.RoleManager.FindByName(roleName);
                 if (role == null)
                 {
                     role = new Role { Name = roleName };
-                    await Database.RoleManager.CreateAsync(role);
+                    Database.RoleManager.Create(role);
                 }
             }
-            await Create(adminDto);
+            Create(adminDto);
         }
 
         public void Dispose()
         {
             Database.Dispose();
-        }*/
+        }
+
+        public UserDTO GetUser(string UserId)
+        {
+            User user = Database.UserManager.FindById(UserId);
+            if (user == null) throw new ArgumentException("no user exists with such id");
+            return Mapper.Map<User, UserDTO>(user);          
+        }
+
+        public IEnumerable<UserDTO> GetUsers()
+        {
+            return Mapper.Map<IQueryable<User>, IEnumerable<UserDTO>>(Database.UserManager.Users);
+        }
+
+        public void ChangeRole(string userId, string roleName)
+        {
+            User user = Database.UserManager.FindById(userId);
+            if (user == null) throw new ArgumentException("No user exists with such id");
+            Role role = Database.RoleManager.FindByName(roleName);
+            if (role == null) throw new ArgumentException("No role exists with such id");
+
+            Database.UserManager.RemoveFromRole(userId, Database.RoleManager.Roles.First().Name);
+            Database.UserManager.AddToRole(userId, roleName);
+        }
     }
 }

@@ -11,6 +11,7 @@ using FluentValidation;
 
 namespace InternetAuction.WEB.Controllers
 {
+    [Authorize]
     public class BetsController : ApiController
     {
         IAuctionService service;
@@ -22,7 +23,7 @@ namespace InternetAuction.WEB.Controllers
             createValidator = createV;
             editValidator = editV;
         }
-
+        [AllowAnonymous]
         public HttpResponseMessage GetBet(int betId)
         {
             try
@@ -36,16 +37,17 @@ namespace InternetAuction.WEB.Controllers
             }
 
         }
-
+        [AllowAnonymous]
         public HttpResponseMessage GetAllBets()
         {
            
-                IEnumerable<BetDTO> bets = service.GetAllBets();
-                return Request.CreateResponse(HttpStatusCode.OK, bets);
+           IEnumerable<BetDTO> bets = service.GetAllBets();
+           return Request.CreateResponse(HttpStatusCode.OK, bets);
             
         }
 
         [HttpPost]
+        [Authorize(Roles ="user")]
         public HttpResponseMessage CreateBet([FromBody]BetDTO betDTO)
         {
             var validResult = createValidator.Validate(betDTO);
@@ -59,6 +61,7 @@ namespace InternetAuction.WEB.Controllers
         }
 
         [HttpPut]
+        [Authorize(Roles = "administrator, moderator")]
         public HttpResponseMessage ChangeBet([FromBody]BetDTO betDTO)
         {
             var validResult = editValidator.Validate(betDTO);
@@ -70,6 +73,7 @@ namespace InternetAuction.WEB.Controllers
             return Request.CreateResponse(HttpStatusCode.OK);
         }
 
+        [Authorize(Roles = "administrator, moderator")]
         public HttpResponseMessage DeleteBet(int betId)
         {
             try

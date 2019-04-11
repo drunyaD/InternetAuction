@@ -13,7 +13,11 @@ namespace InternetAuction.BLL.Interfaces
 {
     public interface IUserService: IDisposable
     {
-        Task<IdentityResult> RegisterUser(UserDTO userDTO);
-        Task<UserDTO> FindUser(string userName, string password);
+        void Create(UserDTO userDto);
+        ClaimsIdentity Authenticate(UserDTO userDto);
+        void SetInitialData(UserDTO adminDto, List<string> roles);
+        UserDTO GetUser(string UserId);
+        IEnumerable<UserDTO> GetUsers();
+        void ChangeRole(string userId, string roleName);
     }
 }
