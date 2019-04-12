@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data.Entity;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using InternetAuction.DAL.EF;
 using InternetAuction.DAL.Entities;
 using InternetAuction.DAL.Interfaces;
@@ -14,8 +9,8 @@ namespace InternetAuction.DAL.Repositories
 {
     public class UnitOfWork : IUnitOfWork
     {
-        private bool _disposed = false;
-        private AuctionContext _db;
+        private bool _disposed;
+        private readonly AuctionContext _db;
         private Repository<Bet> _betRepository;
         private Repository<Category> _categoryRepository;
         private Repository<Image> _imageRepository;
@@ -23,92 +18,45 @@ namespace InternetAuction.DAL.Repositories
         private AppUserManager _userManager;
         private AppRoleManager _roleManager;
 
-        public UnitOfWork(string connectionString)  
+        public UnitOfWork(string connectionString)
         {
             _db = new AuctionContext(connectionString);
         }
 
-        public IRepository<Bet> Bets
-        {
-            get
-            {
-                if (_betRepository == null)
-                    _betRepository = new Repository<Bet>(_db);
-                return _betRepository;
-            }
-        }
+        public IRepository<Bet> Bets => 
+            _betRepository ?? (_betRepository = new Repository<Bet>(_db));
 
-        public IRepository<Category> Categories
-        {
-            get
-            {
-                if (_categoryRepository == null)
-                    _categoryRepository = new Repository<Category>(_db);
-                return _categoryRepository;
-            }
-        }
+        public IRepository<Category> Categories =>
+            _categoryRepository ?? (_categoryRepository = new Repository<Category>(_db));
 
-        public IRepository<Image> Images
-        {
-            get
-            {
-                if (_imageRepository == null)
-                    _imageRepository = new Repository<Image>(_db);
-                    return _imageRepository;
-            }
-        }
+        public IRepository<Image> Images => 
+            _imageRepository ?? (_imageRepository = new Repository<Image>(_db));
 
-            public IRepository<Lot> Lots
-            {
-                get
-                {
-                    if (_lotRepository == null)
-                        _lotRepository = new Repository<Lot>(_db);
-                    return _lotRepository;
-                }
-            }
+        public IRepository<Lot> Lots => 
+            _lotRepository ?? (_lotRepository = new Repository<Lot>(_db));
 
+        public AppUserManager UserManager =>
+            _userManager ?? (_userManager = new AppUserManager(new UserStore<User>(_db)));
 
-        public AppUserManager UserManager
-        {
-
-            get
-            {
-                if (_userManager == null)
-                    _userManager = new AppUserManager(new UserStore<User>(_db));
-                return _userManager;
-            }
-        }
-
-
-        public AppRoleManager RoleManager
-        {
-            get
-            {
-                if (_roleManager == null)
-                    _roleManager = new AppRoleManager(new RoleStore<Role>(_db));
-                return _roleManager;
-            }
-        }
+        public AppRoleManager RoleManager =>
+            _roleManager ?? (_roleManager = new AppRoleManager(new RoleStore<Role>(_db)));
 
         public void Save()
         {
             _db.SaveChanges();
         }
 
-
         public virtual void Dispose(bool disposing)
         {
-            if (_disposed)
+            if (!_disposed) return;
+            if (disposing)
             {
-                if (disposing)
-                {
-                    _db.Dispose();
-                    _userManager.Dispose();
-                    _roleManager.Dispose();
-                }
-                _disposed = true;
+                _db.Dispose();
+                _userManager.Dispose();
+                _roleManager.Dispose();
             }
+
+            _disposed = true;
         }
 
         public void Dispose()

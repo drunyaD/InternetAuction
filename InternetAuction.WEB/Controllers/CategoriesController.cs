@@ -1,35 +1,31 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
 using InternetAuction.BLL.Interfaces;
 using InternetAuction.BLL.DTO;
-using InternetAuction.BLL.Infrastructure;
-using FluentValidation;
-using System.Web;
 
 namespace InternetAuction.WEB.Controllers
 {
     [Authorize]
     public class CategoriesController : ApiController
     {
-        IAuctionService service;
-        ICategoryValidator createValidator;
-        ICategoryEditValidator editValidator;
-        public CategoriesController(IAuctionService serv, ICategoryValidator createV, ICategoryEditValidator editV)
+        private IAuctionService Service { get; }
+        private ICategoryValidator CreationValidator { get; }
+        private ICategoryEditValidator EditingValidator { get; }
+        public CategoriesController(IAuctionService service, 
+            ICategoryValidator creationV, ICategoryEditValidator editingV)
         {
-            service = serv;
-            createValidator = createV;
-            editValidator = editV;
+            Service = service;
+            CreationValidator = creationV;
+            EditingValidator = editingV;
         }
         [AllowAnonymous]
         public HttpResponseMessage GetCategory(int categoryId)
         {   
             try
             {
-                CategoryDTO category = service.GetCategory(categoryId);
+                var category = Service.GetCategory(categoryId);
                 return Request.CreateResponse(HttpStatusCode.OK, category);
             }
             catch (ArgumentException e) {
@@ -41,34 +37,28 @@ namespace InternetAuction.WEB.Controllers
         public HttpResponseMessage GetCategories()
         {
             
-            IEnumerable<CategoryDTO> categories = service.GetAllCategories();
+            var categories = Service.GetAllCategories();
             return Request.CreateResponse(HttpStatusCode.OK, categories);
             
         }
         [Authorize(Roles ="administrator, moderator")]
         [HttpPost]
-        public HttpResponseMessage CreateCategory([FromBody]CategoryDTO categoryDTO)
+        public HttpResponseMessage CreateCategory([FromBody]CategoryDto categoryDto)
         {       
-            var validResult = createValidator.Validate(categoryDTO);
-            if (!validResult.IsValid)
-            {
-                return Request.CreateResponse(HttpStatusCode.BadRequest, validResult.Errors);
-            }   
-            service.CreateCategory(categoryDTO);
-            HttpResponseMessage response = Request.CreateResponse(HttpStatusCode.Created, categoryDTO);
+            var validResult = CreationValidator.Validate(categoryDto);
+            if (!validResult.IsValid) return Request.CreateResponse(HttpStatusCode.BadRequest, validResult.Errors);
+            Service.CreateCategory(categoryDto);
+            var response = Request.CreateResponse(HttpStatusCode.Created, categoryDto);
             return response;       
         }
         [Authorize(Roles ="administrator, moderator")]
         [HttpPut]
-        public HttpResponseMessage ChangeCategory([FromBody]CategoryDTO categoryDTO)
+        public HttpResponseMessage ChangeCategory([FromBody]CategoryDto categoryDto)
         {
 
-            var validResult = editValidator.Validate(categoryDTO);
-            if (!validResult.IsValid)
-            {
-                return Request.CreateResponse(HttpStatusCode.BadRequest, validResult.Errors);
-            }
-            service.EditCategory(categoryDTO);
+            var validResult = EditingValidator.Validate(categoryDto);
+            if (!validResult.IsValid) return Request.CreateResponse(HttpStatusCode.BadRequest, validResult.Errors);
+            Service.EditCategory(categoryDto);
             return Request.CreateResponse(HttpStatusCode.OK);
             
         }
@@ -77,7 +67,7 @@ namespace InternetAuction.WEB.Controllers
         {
             try
             {
-                service.DeleteCategory(id);
+                Service.DeleteCategory(id);
                 return Request.CreateResponse(HttpStatusCode.NoContent);
             }
             catch(ArgumentException e)
@@ -91,7 +81,7 @@ namespace InternetAuction.WEB.Controllers
         {
             try
             {
-                var lots = service.GetLotsByCategory(categoryId);
+                var lots = Service.GetLotsByCategory(categoryId);
                 return Request.CreateResponse(HttpStatusCode.OK, lots);
             }
             catch(ArgumentException e)
@@ -102,10 +92,7 @@ namespace InternetAuction.WEB.Controllers
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing)
-            {
-                service.Dispose();
-            }
+            if (disposing) Service.Dispose();
             base.Dispose(disposing);
         }
     }

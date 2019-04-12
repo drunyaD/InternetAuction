@@ -1,12 +1,7 @@
 ﻿using Ninject.Modules;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 using InternetAuction.BLL.Interfaces;
 using InternetAuction.BLL.Services;
 using InternetAuction.BLL.Infrastructure;
-using Microsoft.Owin.Security.OAuth;
 
 namespace InternetAuction.WEB.Utils
 {
@@ -16,8 +11,8 @@ namespace InternetAuction.WEB.Utils
         {
             Bind<IUserService>().To<UserService>();
             Bind<IAuctionService>().To<AuctionService>();
+            Bind<IUserValidator>().To<UserValidator>();
             Bind<IBetValidator>().To<BetValidator>();
-            Bind<IBetEditValidator>().To<BetEditValidator>();
             Bind<ICategoryValidator>().To<CategoryValidator>();
             Bind<ICategoryEditValidator>().To<CategoryEditValidator>();
             Bind<ILotValidator>().To<LotValidator>();

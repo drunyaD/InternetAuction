@@ -1,19 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using FluentValidation;
+﻿using FluentValidation;
 using InternetAuction.BLL.DTO;
 using InternetAuction.DAL.Interfaces;
-using InternetAuction.DAL.Entities;
 using InternetAuction.BLL.Interfaces;
 
 namespace InternetAuction.BLL.Infrastructure
 {
-    public class LotValidator: AbstractValidator<LotDTO>, ILotValidator
+    public class LotValidator: AbstractValidator<LotDto>, ILotValidator
     {
-        IUnitOfWork Database;
+        private IUnitOfWork Database { get; }
         public LotValidator(IUnitOfWork database)
         {
             Database = database;
@@ -22,18 +16,18 @@ namespace InternetAuction.BLL.Infrastructure
             RuleFor(lot => lot).Must(HaveDuration).WithMessage("Finish Time less then Start Time");
             RuleFor(lot => lot.StartPrice).GreaterThan(0);
             RuleFor(lot => lot.CategoryId).Must(HaveExistingCategory).WithMessage("No category exists with such id");
-            RuleForEach(lot => lot.Images).SetValidator(new ImageValidator(database));
+            RuleForEach(lot => lot.Images).SetValidator(new ImageValidator());
         }
 
         public bool HaveExistingCategory(int categoryId)
         {
-            Category category = Database.Categories.Get(categoryId);
+            var category = Database.Categories.Get(categoryId);
             return category != null;
         }
 
-        public bool HaveDuration(LotDTO lotDTO)
+        public bool HaveDuration(LotDto lotDto)
         {
-            return lotDTO.StartTime < lotDTO.FinishTime;
+            return lotDto.StartTime < lotDto.FinishTime;
         }
     }
 }

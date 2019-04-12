@@ -4,8 +4,8 @@ using InternetAuction.BLL.DTO;
 
 namespace InternetAuction.BLL.Interfaces
 {
-    public interface IBetValidator: IValidator<BetDto>
+    public interface IUserValidator: IValidator<UserDto>
     {
-        void ReconcileWithDb(BetDto bet, CustomContext context);
+        void ReconcileWithDb(UserDto user, CustomContext context);
     }
 }

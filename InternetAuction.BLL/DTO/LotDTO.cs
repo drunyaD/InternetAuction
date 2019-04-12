@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace InternetAuction.BLL.DTO
 {
-    public class LotDTO
+    public class LotDto
     {
-        public LotDTO()
+        public LotDto()
         {
-            Images = new HashSet<ImageDTO>();
-            Bets = new HashSet<BetDTO>();
+            Images = new HashSet<ImageDto>();
+            Bets = new HashSet<BetDto>();
         }
 
         public int Id { get; set; }
@@ -20,9 +17,9 @@ namespace InternetAuction.BLL.DTO
         public DateTime StartTime { get; set; }
         public DateTime FinishTime { get; set; }
         public int StartPrice { get; set; }
-        public string OwnerId { get; set; }
+        public string OwnerName { get; set; }
         public int CategoryId { get; set; }
-        public ICollection<ImageDTO> Images { get; set; }
-        public ICollection<BetDTO> Bets { get; set; }
+        public ICollection<ImageDto> Images { get; set; }
+        public ICollection<BetDto> Bets { get; set; }
     }
 }

@@ -1,17 +1,10 @@
 ﻿using Microsoft.Owin;
 using Owin;
-using Ninject;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 using System.Web.Http;
 using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
 using Ninject.Web.WebApi;
-using Microsoft.Owin.Security.OAuth;
-using InternetAuction.BLL.Interfaces;
 using Microsoft.Owin.Security.Cookies;
 using Microsoft.AspNet.Identity;
 using InternetAuction.BLL.Infrastructure;
@@ -29,7 +22,7 @@ namespace InternetAuction.WEB.App_Start
                 AuthenticationType = DefaultAuthenticationTypes.ApplicationCookie
             });
 
-            HttpConfiguration config = new HttpConfiguration();
+            var config = new HttpConfiguration();
             config.DependencyResolver = new NinjectDependencyResolver(new Ninject.Web.Common.Bootstrapper().Kernel);
             WebApiConfig.Register(config);
             app.UseWebApi(config);

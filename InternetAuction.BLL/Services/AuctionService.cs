@@ -1,99 +1,75 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using AutoMapper;
 using InternetAuction.BLL.DTO;
 using InternetAuction.DAL.Entities;
 using InternetAuction.BLL.Interfaces;
 using InternetAuction.DAL.Interfaces;
-using InternetAuction.BLL.Infrastructure;
-using FluentValidation;
-using FluentValidation.Results;
-using System.Data.Entity;
+using Microsoft.AspNet.Identity;
 
 namespace InternetAuction.BLL.Services
 {
     public class AuctionService : IAuctionService
     {
-        /*
-        static IMapper imagetoDTO = new MapperConfiguration(cfg => cfg.CreateMap<Image, ImageDTO>()).CreateMapper();
-        static IMapper betToDTO = new MapperConfiguration(cfg => cfg.CreateMap<Bet, BetDTO>()).CreateMapper();
-        static IMapper categoryToDTO = new MapperConfiguration(cfg => cfg.CreateMap<Category, CategoryDTO>()).CreateMapper();
-        static IMapper lotToDTO = new MapperConfiguration(cfg => cfg.CreateMap<Lot, LotDTO>()
-        .ForMember(lot => lot.Images, lot => lot.MapFrom(e => imagetoDTO.Map<IEnumerable<Image>, IEnumerable<ImageDTO>>(e.Images)))
-        .ForMember(lot => lot.Bets, lot => lot.MapFrom(e => imagetoDTO.Map<IEnumerable<Bet>, IEnumerable<BetDTO>>(e.Bets)))).CreateMapper();
-*/
-        IUnitOfWork Database { get; set; }
+        private IUnitOfWork Database { get; }
 
         public AuctionService(IUnitOfWork uow)
         {
             Database = uow;
         }
 
-
-        public async void CreateBet(BetDTO betDTO)
+        public void CreateBet(BetDto betDto)
         {
-            //betDTO.PlacingTime = DateTime.Now;  
-
-            Lot lot = Database.Lots.Get(betDTO.LotId);
-            User user = await Database.UserManager.FindByIdAsync(betDTO.UserId);
+            var lot = Database.Lots.Get(betDto.LotId);
+            var user = Database.UserManager.FindByName(betDto.UserName);
             Database.Bets.Create(new Bet
             {
-                Value = betDTO.Value,
-                PlacingTime = betDTO.PlacingTime,
-                LotId = betDTO.LotId,
+                Value = betDto.Value,
+                PlacingTime = betDto.PlacingTime,
+                LotId = betDto.LotId,
                 Lot = lot,
-                UserId = betDTO.UserId,
+                UserId = user.Id,
                 User = user
             });
             Database.Save();
-
         }
 
-        public void CreateCategory(CategoryDTO categoryDTO)
+        public void CreateCategory(CategoryDto categoryDto)
         {
-            Database.Categories.Create(new Category {Name = categoryDTO.Name});
+            Database.Categories.Create(new Category {Name = categoryDto.Name});
             Database.Save();
         }
 
-        public async void CreateLot(LotDTO lotDTO)
+        public void CreateLot(LotDto lotDto)
         {
-
-           // DateTime nowTime = DateTime.Now;
-            Category category = Database.Categories.Get(lotDTO.CategoryId);
-            User owner =  await Database.UserManager.FindByIdAsync(lotDTO.OwnerId);
-            Lot lot = new Lot()
+            var category = Database.Categories.Get(lotDto.CategoryId);
+            var owner = Database.UserManager.FindByName(lotDto.OwnerName);
+            var lot = new Lot
             {
-                Name = lotDTO.Name,
-                Description = lotDTO.Description,
-                StartTime = lotDTO.StartTime,
-                FinishTime = lotDTO.FinishTime,
-                StartPrice = lotDTO.StartPrice,
-                OwnerId = lotDTO.OwnerId,
+                Name = lotDto.Name,
+                Description = lotDto.Description,
+                StartTime = lotDto.StartTime,
+                FinishTime = lotDto.FinishTime,
+                StartPrice = lotDto.StartPrice,
+                OwnerId = owner.Id,
                 LotOwner = owner,
-                CategoryId = lotDTO.CategoryId,
+                CategoryId = lotDto.CategoryId,
                 Category = category
             };
-            foreach (var imageDTO in lotDTO.Images)
+            foreach (var imageDto in lotDto.Images)
             {
-                Image image = new Image
-                {
-                    Picture = imageDTO.Picture,
-                    LotId = lotDTO.Id,
-                    Lot = lot
-                };
+                var image = new Image {Picture = imageDto.Picture, LotId = lotDto.Id, Lot = lot};
                 Database.Images.Create(image);
                 lot.Images.Add(image);
             }
+
             Database.Lots.Create(lot);
             Database.Save();
         }
 
         public void DeleteBet(int betId)
         {
-            Bet bet = Database.Bets.Get(betId);
+            var bet = Database.Bets.Get(betId);
             if (bet == null) throw new ArgumentException("no bet with such id");
             Database.Bets.Delete(betId);
             Database.Save();
@@ -101,7 +77,7 @@ namespace InternetAuction.BLL.Services
 
         public void DeleteCategory(int categoryId)
         {
-            Category category = Database.Categories.Get(categoryId);
+            var category = Database.Categories.Get(categoryId);
             if (category == null) throw new ArgumentException("no category with such id");
             Database.Categories.Delete(categoryId);
             Database.Save();
@@ -109,120 +85,76 @@ namespace InternetAuction.BLL.Services
 
         public void DeleteLot(int lotId)
         {
-            Lot lot = Database.Lots.Get(lotId);
+            var lot = Database.Lots.Get(lotId);
             if (lot == null) throw new ArgumentException("no lot with such id");
             Database.Lots.Delete(lotId);
             Database.Save();
         }
 
-        public async void EditBet(BetDTO betDTO)
+        public void EditCategory(CategoryDto categoryDto)
         {
-
-            Lot lot = Database.Lots.GetQuery().Include(l => l.Bets).FirstOrDefault(l => l.Id == betDTO.LotId);
-            User user = await Database.UserManager.FindByIdAsync(betDTO.UserId);
-            Bet editedBet = new Bet
-            {
-                Id = betDTO.Id,
-                Value = betDTO.Value,
-                PlacingTime = betDTO.PlacingTime,
-                LotId = betDTO.LotId,
-                Lot = lot,
-                UserId = betDTO.UserId,
-                User = user
-            };
-            Database.Bets.Update(editedBet);
+            Database.Categories.Update(new Category {Id = categoryDto.Id, Name = categoryDto.Name});
             Database.Save();
         }
 
-        public void EditCategory(CategoryDTO categoryDTO)
+        public void EditLot(LotDto lotDto)
         {
-            
-            Database.Categories.Update(new Category { Id = categoryDTO.Id, Name = categoryDTO.Name });
-            Database.Save();
-        }
-
-        public async void EditLot(LotDTO lotDTO)
-        {
-            
-            Category category = Database.Categories.Get(lotDTO.CategoryId);
-            User owner = await Database.UserManager.FindByIdAsync(lotDTO.OwnerId);
-            Lot lot = new Lot()
+            var category = Database.Categories.Get(lotDto.CategoryId);
+            var owner = Database.UserManager.FindByName(lotDto.OwnerName);
+            var lot = new Lot
             {
-                Id = lotDTO.Id,
-                Name = lotDTO.Name,
-                Description = lotDTO.Description,
-                StartTime = lotDTO.StartTime,
-                FinishTime = lotDTO.FinishTime,
-                StartPrice = lotDTO.StartPrice,
-                OwnerId = lotDTO.OwnerId,
+                Id = lotDto.Id,
+                Name = lotDto.Name,
+                Description = lotDto.Description,
+                StartTime = lotDto.StartTime,
+                FinishTime = lotDto.FinishTime,
+                StartPrice = lotDto.StartPrice,
+                OwnerId = owner.Id,
                 LotOwner = owner,
-                CategoryId = lotDTO.CategoryId,
+                CategoryId = lotDto.CategoryId,
                 Category = category
             };
-            foreach (var i in Database.Images.Find(i => i.LotId == lotDTO.Id))
+            foreach (var i in Database.Images.Find(i => i.LotId == lotDto.Id)) Database.Images.Delete(i.Id);
+            foreach (var imageDto in lotDto.Images)
             {
-                Database.Images.Delete(i.Id);
-            }
-            foreach (var imageDTO in lotDTO.Images)
-            {
-                Image newImage = new Image
-                {
-                    Picture = imageDTO.Picture,
-                    LotId = lotDTO.Id,
-                    Lot = lot
-                };
+                var newImage = new Image {Picture = imageDto.Picture, LotId = lotDto.Id, Lot = lot};
                 Database.Images.Create(newImage);
                 lot.Images.Add(newImage);
             }
+
             Database.Lots.Update(lot);
             Database.Save();
-
         }
 
-        public IEnumerable<CategoryDTO> GetAllCategories()
+        public IEnumerable<CategoryDto> GetAllCategories()
         {
-            return Mapper.Map<IEnumerable<Category>, IEnumerable<CategoryDTO>>(
-                Database
-                .Categories
-                .GetAll()
-            );
+            return Mapper.Map<IEnumerable<Category>, IEnumerable<CategoryDto>>(Database.Categories.GetAll());
         }
 
-        public IEnumerable<LotDTO> GetAllLots()
+        public IEnumerable<LotDto> GetAllLots()
         {
-            return Mapper.Map<IEnumerable<Lot>, IEnumerable<LotDTO>>(
-                Database
-                .Lots
-                .GetAll()
-            );
+            return Mapper.Map<IEnumerable<Lot>, IEnumerable<LotDto>>(Database.Lots.GetAll());
         }
 
-        public BetDTO GetBet(int betId)
+        public BetDto GetBet(int betId)
         {
             var bet = Database.Bets.Get(betId);
             if (bet == null) throw new ArgumentException("no bet with such id");
-            return Mapper.Map<Bet, BetDTO>(bet);
+            return Mapper.Map<Bet, BetDto>(bet);
         }
 
-        public CategoryDTO GetCategory(int categoryId)
+        public CategoryDto GetCategory(int categoryId)
         {
             var category = Database.Categories.Get(categoryId);
             if (category == null) throw new ArgumentException("no category with such id");
-            return Mapper.Map<Category, CategoryDTO>(category);
+            return Mapper.Map<Category, CategoryDto>(category);
         }
 
-        public ImageDTO GetImage(int imageId)
-        {
-            var image = Database.Images.Get(imageId);
-            if (image == null) throw new ArgumentException("no image with such id");
-            return Mapper.Map<Image, ImageDTO>(image);
-        }
-
-        public LotDTO GetLot(int lotId)
+        public LotDto GetLot(int lotId)
         {
             var lot = Database.Lots.Get(lotId);
             if (lot == null) throw new ArgumentException("No lot with such id");
-            return Mapper.Map<Lot, LotDTO>(lot);
+            return Mapper.Map<Lot, LotDto>(lot);
         }
 
         public void Dispose()
@@ -230,35 +162,23 @@ namespace InternetAuction.BLL.Services
             Database.Dispose();
         }
 
-        public IEnumerable<LotDTO> GetLotsByCategory(int categoryId)
+        public IEnumerable<LotDto> GetLotsByCategory(int categoryId)
         {
             var category = Database.Categories.Get(categoryId);
             if (category == null) throw new ArgumentException("No category with such id");
-            return Mapper.Map<IEnumerable<Lot>, List<LotDTO>>(
-                Database
-                .Lots
-                .Find(l => l.CategoryId == categoryId)
-            );
+            return Mapper.Map<IEnumerable<Lot>, List<LotDto>>(Database.Lots.Find(l => l.CategoryId == categoryId));
         }
 
-        public IEnumerable<BetDTO> GetBetsByLot(int lotId)
+        public IEnumerable<BetDto> GetBetsByLot(int lotId)
         {
-            Lot lot = Database.Lots.Get(lotId);
+            var lot = Database.Lots.Get(lotId);
             if (lot == null) throw new ArgumentException("No lot with such id");
-            return Mapper.Map<IEnumerable<Bet>, IEnumerable<BetDTO>>(
-                Database
-                .Bets
-                .Find(b => b.LotId == lotId)
-                );
+            return Mapper.Map<IEnumerable<Bet>, IEnumerable<BetDto>>(Database.Bets.Find(b => b.LotId == lotId));
         }
 
-        public IEnumerable<BetDTO> GetAllBets()
+        public IEnumerable<BetDto> GetAllBets()
         {
-            return Mapper.Map<IEnumerable<Bet>, IEnumerable<BetDTO>>(
-                Database
-                .Bets
-                .GetAll()
-            );
+            return Mapper.Map<IEnumerable<Bet>, IEnumerable<BetDto>>(Database.Bets.GetAll());
         }
     }
 }

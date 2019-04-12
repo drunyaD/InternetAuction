@@ -1,108 +1,88 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Web.Http;
-using Microsoft.Owin.Security;
-using Microsoft.AspNet.Identity.Owin;
-using InternetAuction.BLL.Interfaces;
 using System.Web;
-using System.Security.Claims;
+using System.Web.Http;
+using System.Web.Mvc;
 using InternetAuction.BLL.DTO;
-using System.Threading.Tasks;
+using InternetAuction.BLL.Interfaces;
 using InternetAuction.WEB.Models;
-using Microsoft.AspNet.Identity;
-using InternetAuction.BLL.Infrastructure;
+using Microsoft.Owin.Security;
 
 namespace InternetAuction.WEB.Controllers
 {
-    [Authorize]
+    [System.Web.Http.Authorize]
     public class UsersController : ApiController
     {
-        private IUserService userService;
-        private IAuthenticationManager authenticationManager
+        private IUserService Service { get; }
+        private IUserValidator Validator { get; }
+        private IAuthenticationManager authenticationManager => HttpContext.Current.GetOwinContext().Authentication;
+
+        public UsersController(IUserService service, IUserValidator validator)
         {
-            get
-            {
-                return HttpContext.Current.GetOwinContext().Authentication;
-            }
+            Service = service;
+            Validator = validator;
         }
 
-        public UsersController(IUserService service)
-        {
-            userService = service;
-        }
-
-        [AllowAnonymous]
-        [HttpPost]
-        [Route("api/Autentification")]
-        [System.Web.Mvc.ValidateAntiForgeryToken]
+        [System.Web.Http.AllowAnonymous]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("api/authentication")]
+        [ValidateAntiForgeryToken]
         public HttpResponseMessage Login([FromBody]LoginModel model)
         {
             if (ModelState.IsValid)
             {
-                UserDTO userDto = new UserDTO {UserName = model.UserName, Password = model.Password };
-                ClaimsIdentity claim = userService.Authenticate(userDto);
+                var userDto = new UserDto {UserName = model.UserName, Password = model.Password };
+                var claim = Service.Authenticate(userDto);
                 if (claim == null)
                 {
-                    return Request.CreateResponse(HttpStatusCode.BadRequest,"неверный логин или пароль");
+                    return Request.CreateResponse(HttpStatusCode.BadRequest,"wrong login or password");
                 }
-                else
+
+                authenticationManager.SignOut();
+                authenticationManager.SignIn(new AuthenticationProperties
                 {
-                    authenticationManager.SignOut();
-                    authenticationManager.SignIn(new AuthenticationProperties
-                    {
-                        IsPersistent = true
-                    }, claim);
-                    return Request.CreateResponse(HttpStatusCode.OK);
-                }
+                    IsPersistent = true
+                }, claim);
+                return Request.CreateResponse(HttpStatusCode.OK);
             }
             return Request.CreateResponse(HttpStatusCode.BadRequest);
         }
         
-        [Route("api/Autentification")]
-        [HttpDelete]
-        [AllowAnonymous]
-        public IHttpActionResult Logout()
+        [System.Web.Http.Route("api/authentication")]
+        [System.Web.Http.HttpDelete]
+        [System.Web.Http.AllowAnonymous]
+        public HttpResponseMessage Logout()
         {
             authenticationManager.SignOut();
-            return Ok();
-        }
-
-        [HttpPost]
-        [Route("api/Users")]
-        [AllowAnonymous]
-        public HttpResponseMessage Register([FromBody]RegisterModel registerModel)
-        {              
-            if (!ModelState.IsValid)
-            {
-                return Request.CreateResponse(HttpStatusCode.BadRequest, "data is not valid");
-            }
-            try
-            {
-                userService.Create(new UserDTO
-                {
-                    UserName = registerModel.UserName,
-                    Email = registerModel.Email,
-                    Password = registerModel.Password,
-                    Role = "user"
-                });
-            }
-
-            catch(Exception e)
-            {
-                return Request.CreateResponse(HttpStatusCode.BadRequest, e.Message);
-            }
             return Request.CreateResponse(HttpStatusCode.OK);
         }
-        [HttpPut]
-        [Authorize(Roles = "administrator")]
+
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("api/users")]
+        [System.Web.Http.AllowAnonymous]
+        public HttpResponseMessage Register([FromBody]RegisterModel registerModel)
+        {
+            var user = new UserDto
+            {
+                UserName = registerModel.UserName,
+                Email = registerModel.Email,
+                Password = registerModel.Password,
+                Role = "user"
+            };
+            var result = Validator.Validate(user);
+            if (!result.IsValid) return Request.CreateResponse(HttpStatusCode.BadRequest, result.Errors);
+            Service.Create(user);
+            return Request.CreateResponse(HttpStatusCode.Created, user);
+        }
+        [System.Web.Http.HttpPut]
+        [System.Web.Http.Authorize(Roles = "administrator")]
         public HttpResponseMessage ChangeRole([FromUri]string userId, [FromBody]string roleName)
         {
             try
             {
-                userService.ChangeRole(userId, roleName);
+                Service.ChangeRole(userId, roleName);
             }
             catch (ArgumentException e)
             {
@@ -111,20 +91,20 @@ namespace InternetAuction.WEB.Controllers
             return Request.CreateResponse(HttpStatusCode.OK);
         }
 
-        [Authorize(Roles = "administrator, moderator")]
+        [System.Web.Http.Authorize(Roles = "administrator, moderator")]
         public HttpResponseMessage GetUsers()
         {
-            var users = userService.GetUsers();
+            var users = Service.GetUsers();
             return Request.CreateResponse(HttpStatusCode.OK, users);
         }
 
-        [Authorize(Roles = "administrator, moderator")]
+        [System.Web.Http.Authorize(Roles = "administrator, moderator")]
         public HttpResponseMessage GetUser(string userId)
         {
-            UserDTO user;
+            UserDto user;
             try
             {
-                user = userService.GetUser(userId);
+                user = Service.GetUser(userId);
             }
             catch(ArgumentException e)
             {
@@ -135,25 +115,20 @@ namespace InternetAuction.WEB.Controllers
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing)
-            {
-                userService.Dispose();
-            }
+            if (disposing) Service.Dispose();
 
             base.Dispose(disposing);
         }
 
         private void SetInitialDataAsync()
         {
-            userService.SetInitialData(new UserDTO
+            Service.SetInitialData(new UserDto
             {
                 Email = "petr@mail.ru",
                 UserName = "petr@mail.ru",
                 Password = "adminpassword",
-                Role = "administrator",
+                Role = "administrator"
             }, new List<string> { "user", "administrator", "moderator", "bannedUser"});
         }
-
-
     }
 }

@@ -1,34 +1,31 @@
 ﻿using InternetAuction.BLL.DTO;
-using InternetAuction.BLL.Infrastructure;
 using InternetAuction.BLL.Interfaces;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
-using FluentValidation;
+using System.Web;
 
 namespace InternetAuction.WEB.Controllers
 {
     [Authorize]
     public class LotsController : ApiController
     {
-        IAuctionService service;
-        ILotValidator createValidator;
-        ILotEditValidator editValidator;
-        public LotsController(IAuctionService serv, ILotValidator createV, ILotEditValidator editV)
+        private IAuctionService Service { get; }
+        private ILotValidator CreationValidator { get; }
+        private ILotEditValidator EditingValidator { get; }
+        public LotsController(IAuctionService service, ILotValidator createV, ILotEditValidator editingV)
         {
-            service = serv;
-            createValidator = createV;
-            editValidator = editV;
+            Service = service;
+            CreationValidator = createV;
+            EditingValidator = editingV;
         }
         [AllowAnonymous]
         public HttpResponseMessage GetLot(int lotId)
         {
             try
             {
-                LotDTO lot = service.GetLot(lotId);
+                var lot = Service.GetLot(lotId);
                 return Request.CreateResponse(HttpStatusCode.OK, lot);
             }
             catch (ArgumentException e)
@@ -41,35 +38,30 @@ namespace InternetAuction.WEB.Controllers
         public HttpResponseMessage GetLots()
         {
             
-                IEnumerable<LotDTO> lots = service.GetAllLots();
-                return Request.CreateResponse(HttpStatusCode.OK, lots);
- 
+            var lots = Service.GetAllLots();
+            return Request.CreateResponse(HttpStatusCode.OK, lots);
         }
 
         [HttpPost]
         [Authorize(Roles ="user")]
-        public HttpResponseMessage CreateLot([FromBody]LotDTO lotDTO)
+        public HttpResponseMessage CreateLot([FromBody]LotDto lotDto)
         {
-            var validResult = createValidator.Validate(lotDTO);
-            if (!validResult.IsValid)
-            {
-                return Request.CreateResponse(HttpStatusCode.BadRequest, validResult.Errors);
-            }
-            service.CreateLot(lotDTO);
-            HttpResponseMessage response = Request.CreateResponse(HttpStatusCode.Created, lotDTO);
+            lotDto.OwnerName = HttpContext.Current.User.Identity.Name;
+            lotDto.StartTime = DateTime.Now;
+            var validResult = CreationValidator.Validate(lotDto);
+            if (!validResult.IsValid) return Request.CreateResponse(HttpStatusCode.BadRequest, validResult.Errors);
+            Service.CreateLot(lotDto);
+            var response = Request.CreateResponse(HttpStatusCode.Created, lotDto);
             return response;
         }
 
         [HttpPut]
         [Authorize(Roles ="administrator, moderator")]
-        public HttpResponseMessage ChangeLot([FromBody]LotDTO lotDTO)
+        public HttpResponseMessage ChangeLot([FromBody]LotDto lotDto)
         {
-            var validResult = editValidator.Validate(lotDTO);
-            if (!validResult.IsValid)
-            {
-                return Request.CreateResponse(HttpStatusCode.BadRequest, validResult.Errors);
-            }
-            service.EditLot(lotDTO);
+            var validResult = EditingValidator.Validate(lotDto);
+            if (!validResult.IsValid) return Request.CreateResponse(HttpStatusCode.BadRequest, validResult.Errors);
+            Service.EditLot(lotDto);
             return Request.CreateResponse(HttpStatusCode.OK);
         }
         [Authorize(Roles ="administrator, moderator")]
@@ -77,7 +69,7 @@ namespace InternetAuction.WEB.Controllers
         {
             try
             {
-                service.DeleteLot(id);
+                Service.DeleteLot(id);
                 return Request.CreateResponse(HttpStatusCode.NoContent);
             }
             catch (ArgumentException e)
@@ -91,7 +83,7 @@ namespace InternetAuction.WEB.Controllers
         {
             try
             {
-                var bets = service.GetBetsByLot(lotId);
+                var bets = Service.GetBetsByLot(lotId);
                 return Request.CreateResponse(HttpStatusCode.OK, bets);
             }
             catch (ArgumentException e)
@@ -102,10 +94,7 @@ namespace InternetAuction.WEB.Controllers
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing)
-            {
-                service.Dispose();
-            }
+            if (disposing) Service.Dispose();
             base.Dispose(disposing);
         }
     }

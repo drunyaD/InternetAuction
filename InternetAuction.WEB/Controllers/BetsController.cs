@@ -1,34 +1,29 @@
 ﻿using InternetAuction.BLL.DTO;
-using InternetAuction.BLL.Infrastructure;
 using InternetAuction.BLL.Interfaces;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
-using FluentValidation;
+using System.Web;
 
 namespace InternetAuction.WEB.Controllers
 {
     [Authorize]
     public class BetsController : ApiController
     {
-        IAuctionService service;
-        IBetValidator createValidator;
-        IBetEditValidator editValidator;
-        public BetsController(IAuctionService serv, IBetValidator createV, IBetEditValidator editV)
+        private IAuctionService Service { get; }
+        private IBetValidator Validator { get; }
+        public BetsController(IAuctionService service, IBetValidator validator)
         {
-            service = serv;
-            createValidator = createV;
-            editValidator = editV;
+            Service = service;
+            Validator = validator;
         }
         [AllowAnonymous]
         public HttpResponseMessage GetBet(int betId)
         {
             try
             {
-                BetDTO bet = service.GetBet(betId);
+                var bet = Service.GetBet(betId);
                 return Request.CreateResponse(HttpStatusCode.OK, bet);
             }
             catch (ArgumentException e)
@@ -41,36 +36,22 @@ namespace InternetAuction.WEB.Controllers
         public HttpResponseMessage GetAllBets()
         {
            
-           IEnumerable<BetDTO> bets = service.GetAllBets();
+           var bets = Service.GetAllBets();
            return Request.CreateResponse(HttpStatusCode.OK, bets);
             
         }
 
         [HttpPost]
         [Authorize(Roles ="user")]
-        public HttpResponseMessage CreateBet([FromBody]BetDTO betDTO)
+        public HttpResponseMessage CreateBet([FromBody]BetDto betDto)
         {
-            var validResult = createValidator.Validate(betDTO);
-            if (!validResult.IsValid)
-            {
-                return Request.CreateResponse(HttpStatusCode.BadRequest, validResult.Errors);
-            }
-            service.CreateBet(betDTO);
-            HttpResponseMessage response = Request.CreateResponse(HttpStatusCode.Created, betDTO);
-            return response;
-        }
+            betDto.UserName = HttpContext.Current.User.Identity.Name;
+            betDto.PlacingTime = DateTime.Now;
+            var validResult = Validator.Validate(betDto);
+            if (!validResult.IsValid) return Request.CreateResponse(HttpStatusCode.BadRequest, validResult.Errors);
+            Service.CreateBet(betDto);
+            return Request.CreateResponse(HttpStatusCode.Created, betDto);
 
-        [HttpPut]
-        [Authorize(Roles = "administrator, moderator")]
-        public HttpResponseMessage ChangeBet([FromBody]BetDTO betDTO)
-        {
-            var validResult = editValidator.Validate(betDTO);
-            if (!validResult.IsValid)
-            {
-                return Request.CreateResponse(HttpStatusCode.BadRequest, validResult.Errors);
-            }
-            service.EditBet(betDTO);
-            return Request.CreateResponse(HttpStatusCode.OK);
         }
 
         [Authorize(Roles = "administrator, moderator")]
@@ -78,7 +59,7 @@ namespace InternetAuction.WEB.Controllers
         {
             try
             {
-                service.DeleteBet(betId);
+                Service.DeleteBet(betId);
                 return Request.CreateResponse(HttpStatusCode.NoContent);
             }
             catch (ArgumentException e)
@@ -90,10 +71,7 @@ namespace InternetAuction.WEB.Controllers
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing)
-            {
-                service.Dispose();
-            }
+            if (disposing) Service.Dispose();
             base.Dispose(disposing);
         }
     }
