@@ -21,6 +21,7 @@ namespace InternetAuction.WEB.Controllers
             EditingValidator = editingV;
         }
         [AllowAnonymous]
+        [Route("api/categories/{categoryId}")]
         public HttpResponseMessage GetCategory(int categoryId)
         {   
             try
@@ -62,6 +63,8 @@ namespace InternetAuction.WEB.Controllers
             return Request.CreateResponse(HttpStatusCode.OK);
             
         }
+        [HttpDelete]
+        [Route("api/categories/{id}")]
         [Authorize(Roles ="administrator, moderator")]
         public HttpResponseMessage DeleteCategory(int id)
         {
@@ -76,7 +79,7 @@ namespace InternetAuction.WEB.Controllers
             }
         }
         [AllowAnonymous]
-        [Route("api/categories/{id}/lots")]
+        [Route("api/categories/{categoryId}/lots")]
         public HttpResponseMessage GetLotsByCategory(int categoryId)
         {
             try

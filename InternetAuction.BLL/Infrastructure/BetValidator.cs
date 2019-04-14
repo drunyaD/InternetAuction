@@ -38,7 +38,7 @@ namespace InternetAuction.BLL.Infrastructure
                 else
                 {
                     if (bet.PlacingTime >= lot.FinishTime) context.AddFailure("PlacingTime", "Must not be expired");
-                    if (lot.Bets == null)
+                    if (lot.Bets.Count == 0)
                     {
                         if (bet.Value < lot.StartPrice) context.AddFailure("Value", "Too small bet");
                     }

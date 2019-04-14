@@ -14,7 +14,7 @@ namespace InternetAuction.BLL.Infrastructure
         {
             Database = database;
             RuleFor(user => user.Email).MinimumLength(3).MaximumLength(254).EmailAddress();
-            RuleFor(user => user.UserName).MinimumLength(3).MinimumLength(50);
+            RuleFor(user => user.UserName).MinimumLength(3).MaximumLength(50);
             RuleFor(user => user.Password).MinimumLength(8).MaximumLength(50);
             RuleFor(user => user).Custom(ReconcileWithDb);
         }

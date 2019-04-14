@@ -9,6 +9,7 @@ using Microsoft.AspNet.Identity;
 
 namespace InternetAuction.BLL.Services
 {
+
     public class AuctionService : IAuctionService
     {
         private IUnitOfWork Database { get; }
@@ -70,24 +71,24 @@ namespace InternetAuction.BLL.Services
         public void DeleteBet(int betId)
         {
             var bet = Database.Bets.Get(betId);
-            if (bet == null) throw new ArgumentException("no bet with such id");
-            Database.Bets.Delete(betId);
+            if (bet == null) throw new ArgumentException("no bet exists with such id");
+            Database.Bets.Delete(bet);
             Database.Save();
         }
 
         public void DeleteCategory(int categoryId)
         {
             var category = Database.Categories.Get(categoryId);
-            if (category == null) throw new ArgumentException("no category with such id");
-            Database.Categories.Delete(categoryId);
+            if (category == null) throw new ArgumentException("no category exists with such id");
+            Database.Categories.Delete(category);
             Database.Save();
         }
 
         public void DeleteLot(int lotId)
         {
             var lot = Database.Lots.Get(lotId);
-            if (lot == null) throw new ArgumentException("no lot with such id");
-            Database.Lots.Delete(lotId);
+            if (lot == null) throw new ArgumentException("no lot exists with such id");
+            Database.Lots.Delete(lot);
             Database.Save();
         }
 
@@ -114,7 +115,7 @@ namespace InternetAuction.BLL.Services
                 CategoryId = lotDto.CategoryId,
                 Category = category
             };
-            foreach (var i in Database.Images.Find(i => i.LotId == lotDto.Id)) Database.Images.Delete(i.Id);
+            foreach (var i in Database.Images.Find(i => i.LotId == lotDto.Id)) Database.Images.Delete(i);
             foreach (var imageDto in lotDto.Images)
             {
                 var newImage = new Image {Picture = imageDto.Picture, LotId = lotDto.Id, Lot = lot};
@@ -139,21 +140,21 @@ namespace InternetAuction.BLL.Services
         public BetDto GetBet(int betId)
         {
             var bet = Database.Bets.Get(betId);
-            if (bet == null) throw new ArgumentException("no bet with such id");
+            if (bet == null) throw new ArgumentException("no bet exists with such id");
             return Mapper.Map<Bet, BetDto>(bet);
         }
 
         public CategoryDto GetCategory(int categoryId)
         {
             var category = Database.Categories.Get(categoryId);
-            if (category == null) throw new ArgumentException("no category with such id");
+            if (category == null) throw new ArgumentException("no category exists with such id");
             return Mapper.Map<Category, CategoryDto>(category);
         }
 
         public LotDto GetLot(int lotId)
         {
             var lot = Database.Lots.Get(lotId);
-            if (lot == null) throw new ArgumentException("No lot with such id");
+            if (lot == null) throw new ArgumentException("no lot exists with such id");
             return Mapper.Map<Lot, LotDto>(lot);
         }
 
@@ -165,14 +166,14 @@ namespace InternetAuction.BLL.Services
         public IEnumerable<LotDto> GetLotsByCategory(int categoryId)
         {
             var category = Database.Categories.Get(categoryId);
-            if (category == null) throw new ArgumentException("No category with such id");
+            if (category == null) throw new ArgumentException("no category exists with such id");
             return Mapper.Map<IEnumerable<Lot>, List<LotDto>>(Database.Lots.Find(l => l.CategoryId == categoryId));
         }
 
         public IEnumerable<BetDto> GetBetsByLot(int lotId)
         {
             var lot = Database.Lots.Get(lotId);
-            if (lot == null) throw new ArgumentException("No lot with such id");
+            if (lot == null) throw new ArgumentException("no lot exists with such id");
             return Mapper.Map<IEnumerable<Bet>, IEnumerable<BetDto>>(Database.Bets.Find(b => b.LotId == lotId));
         }
 

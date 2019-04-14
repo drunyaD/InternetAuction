@@ -8,6 +8,7 @@ using Ninject.Web.WebApi;
 using Microsoft.Owin.Security.Cookies;
 using Microsoft.AspNet.Identity;
 using InternetAuction.BLL.Infrastructure;
+using System.Data.Entity;
 
 [assembly: OwinStartup(typeof(InternetAuction.WEB.App_Start.Startup))]
 namespace InternetAuction.WEB.App_Start
@@ -26,7 +27,6 @@ namespace InternetAuction.WEB.App_Start
             config.DependencyResolver = new NinjectDependencyResolver(new Ninject.Web.Common.Bootstrapper().Kernel);
             WebApiConfig.Register(config);
             app.UseWebApi(config);
-
             AreaRegistration.RegisterAllAreas();
             GlobalConfiguration.Configure(WebApiConfig.Register);
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);

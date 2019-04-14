@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Http;
 using System.Web.Http;
 using System.Web;
+using System.Runtime.CompilerServices;
 
 namespace InternetAuction.WEB.Controllers
 {
@@ -19,6 +20,7 @@ namespace InternetAuction.WEB.Controllers
             Validator = validator;
         }
         [AllowAnonymous]
+        [Route("api/bets/{betId}")]
         public HttpResponseMessage GetBet(int betId)
         {
             try
@@ -43,6 +45,7 @@ namespace InternetAuction.WEB.Controllers
 
         [HttpPost]
         [Authorize(Roles ="user")]
+        [MethodImpl(MethodImplOptions.Synchronized)]
         public HttpResponseMessage CreateBet([FromBody]BetDto betDto)
         {
             betDto.UserName = HttpContext.Current.User.Identity.Name;
@@ -51,9 +54,9 @@ namespace InternetAuction.WEB.Controllers
             if (!validResult.IsValid) return Request.CreateResponse(HttpStatusCode.BadRequest, validResult.Errors);
             Service.CreateBet(betDto);
             return Request.CreateResponse(HttpStatusCode.Created, betDto);
-
         }
-
+        [HttpDelete]
+        [Route("api/bets/{betId}")]
         [Authorize(Roles = "administrator, moderator")]
         public HttpResponseMessage DeleteBet(int betId)
         {

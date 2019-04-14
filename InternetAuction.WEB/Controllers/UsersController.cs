@@ -17,7 +17,7 @@ namespace InternetAuction.WEB.Controllers
     {
         private IUserService Service { get; }
         private IUserValidator Validator { get; }
-        private IAuthenticationManager authenticationManager => HttpContext.Current.GetOwinContext().Authentication;
+        private IAuthenticationManager AuthenticationManager => HttpContext.Current.GetOwinContext().Authentication;
 
         public UsersController(IUserService service, IUserValidator validator)
         {
@@ -40,8 +40,8 @@ namespace InternetAuction.WEB.Controllers
                     return Request.CreateResponse(HttpStatusCode.BadRequest,"wrong login or password");
                 }
 
-                authenticationManager.SignOut();
-                authenticationManager.SignIn(new AuthenticationProperties
+                AuthenticationManager.SignOut();
+                AuthenticationManager.SignIn(new AuthenticationProperties
                 {
                     IsPersistent = true
                 }, claim);
@@ -55,12 +55,11 @@ namespace InternetAuction.WEB.Controllers
         [System.Web.Http.AllowAnonymous]
         public HttpResponseMessage Logout()
         {
-            authenticationManager.SignOut();
+            AuthenticationManager.SignOut();
             return Request.CreateResponse(HttpStatusCode.OK);
         }
 
         [System.Web.Http.HttpPost]
-        [System.Web.Http.Route("api/users")]
         [System.Web.Http.AllowAnonymous]
         public HttpResponseMessage Register([FromBody]RegisterModel registerModel)
         {
@@ -77,6 +76,7 @@ namespace InternetAuction.WEB.Controllers
             return Request.CreateResponse(HttpStatusCode.Created, user);
         }
         [System.Web.Http.HttpPut]
+        [System.Web.Http.Route("api/users/{userId}")]
         [System.Web.Http.Authorize(Roles = "administrator")]
         public HttpResponseMessage ChangeRole([FromUri]string userId, [FromBody]string roleName)
         {
@@ -120,15 +120,5 @@ namespace InternetAuction.WEB.Controllers
             base.Dispose(disposing);
         }
 
-        private void SetInitialDataAsync()
-        {
-            Service.SetInitialData(new UserDto
-            {
-                Email = "petr@mail.ru",
-                UserName = "petr@mail.ru",
-                Password = "adminpassword",
-                Role = "administrator"
-            }, new List<string> { "user", "administrator", "moderator", "bannedUser"});
-        }
     }
 }

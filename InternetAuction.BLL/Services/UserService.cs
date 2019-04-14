@@ -37,20 +37,6 @@ namespace InternetAuction.BLL.Services
             return claim;
         }
 
-        public void SetInitialData(UserDto adminDto, List<string> roles)
-        {
-            foreach (var roleName in roles)
-            {
-                var role = Database.RoleManager.FindByName(roleName);
-                if (role == null)
-                {
-                    role = new Role { Name = roleName };
-                    Database.RoleManager.Create(role);
-                }
-            }
-            Create(adminDto);
-        }
-
         public void Dispose()
         {
             Database.Dispose();
@@ -75,7 +61,9 @@ namespace InternetAuction.BLL.Services
             var role = Database.RoleManager.FindByName(roleName);
             if (role == null) throw new ArgumentException("No role exists with such name");
 
-            Database.UserManager.RemoveFromRole(userId, Database.RoleManager.Roles.First().Name);
+            Database.UserManager.RemoveFromRole(userId, 
+                Database.RoleManager.FindById(user.Roles.First().RoleId).Name);
+
             Database.UserManager.AddToRole(userId, roleName);
         }
     }

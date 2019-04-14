@@ -9,7 +9,6 @@ namespace InternetAuction.BLL.Interfaces
     {
         void Create(UserDto userDto);
         ClaimsIdentity Authenticate(UserDto userDto);
-        void SetInitialData(UserDto adminDto, List<string> roles);
         UserDto GetUser(string userId);
         IEnumerable<UserDto> GetUsers();
         void ChangeRole(string userId, string roleName);

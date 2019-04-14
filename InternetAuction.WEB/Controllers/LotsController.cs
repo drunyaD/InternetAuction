@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Http;
 using System.Web.Http;
 using System.Web;
+using System.Runtime.CompilerServices;
 
 namespace InternetAuction.WEB.Controllers
 {
@@ -21,6 +22,7 @@ namespace InternetAuction.WEB.Controllers
             EditingValidator = editingV;
         }
         [AllowAnonymous]
+        [Route("api/lots/{lotId}")]
         public HttpResponseMessage GetLot(int lotId)
         {
             try
@@ -57,19 +59,23 @@ namespace InternetAuction.WEB.Controllers
 
         [HttpPut]
         [Authorize(Roles ="administrator, moderator")]
-        public HttpResponseMessage ChangeLot([FromBody]LotDto lotDto)
+        [Route("api/lots/{lotId}")]
+        public HttpResponseMessage ChangeLot([FromUri]int lotId, [FromBody]LotDto lotDto)
         {
+            lotDto.Id = lotId;
             var validResult = EditingValidator.Validate(lotDto);
             if (!validResult.IsValid) return Request.CreateResponse(HttpStatusCode.BadRequest, validResult.Errors);
             Service.EditLot(lotDto);
             return Request.CreateResponse(HttpStatusCode.OK);
         }
+        [HttpDelete]
+        [Route("api/lots/{lotId}")]
         [Authorize(Roles ="administrator, moderator")]
-        public HttpResponseMessage DeleteLot(int id)
+        public HttpResponseMessage DeleteLot(int lotId)
         {
             try
             {
-                Service.DeleteLot(id);
+                Service.DeleteLot(lotId);
                 return Request.CreateResponse(HttpStatusCode.NoContent);
             }
             catch (ArgumentException e)

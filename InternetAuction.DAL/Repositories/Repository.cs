@@ -27,10 +27,9 @@ namespace InternetAuction.DAL.Repositories
             _context.Entry(item).State = EntityState.Modified;
         }
 
-        public void Delete(int id)
+        public void Delete(T item)
         {
-            var item = _dbSet.Find(id);
-            if (item != null) _dbSet.Remove(item);
+            _dbSet.Remove(item);
         }
 
         public IEnumerable<T> Find(Func<T, bool> predicate)
