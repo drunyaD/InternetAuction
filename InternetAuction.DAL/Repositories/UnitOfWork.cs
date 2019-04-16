@@ -4,6 +4,7 @@ using InternetAuction.DAL.Entities;
 using InternetAuction.DAL.Interfaces;
 using InternetAuction.DAL.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
+using System.Data.Entity.Validation;
 
 namespace InternetAuction.DAL.Repositories
 {
@@ -43,7 +44,7 @@ namespace InternetAuction.DAL.Repositories
 
         public void Save()
         {
-            _db.SaveChanges();
+            _db.SaveChanges();             
         }
 
         public virtual void Dispose(bool disposing)

@@ -13,7 +13,7 @@ namespace InternetAuction.BLL.Infrastructure
         public CategoryValidator(IUnitOfWork database)
         {
             Database = database;
-            RuleFor(category => category.Name).Length(3, 50);
+            RuleFor(category => category.Name).NotNull().Length(3, 200);
             RuleFor(category => category).Must(HaveUniqueName)
                 .WithMessage("Name must be unique").WithName("Name");
         }

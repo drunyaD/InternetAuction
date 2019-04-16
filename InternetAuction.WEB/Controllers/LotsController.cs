@@ -48,10 +48,13 @@ namespace InternetAuction.WEB.Controllers
         [Authorize(Roles ="user")]
         public HttpResponseMessage CreateLot([FromBody]LotDto lotDto)
         {
+            if (lotDto == null || !ModelState.IsValid)
+                return Request.CreateResponse(HttpStatusCode.BadRequest, "Data is not full");
             lotDto.OwnerName = HttpContext.Current.User.Identity.Name;
             lotDto.StartTime = DateTime.Now;
             var validResult = CreationValidator.Validate(lotDto);
-            if (!validResult.IsValid) return Request.CreateResponse(HttpStatusCode.BadRequest, validResult.Errors);
+            if (!validResult.IsValid)
+                return Request.CreateResponse(HttpStatusCode.BadRequest, validResult.Errors);
             Service.CreateLot(lotDto);
             var response = Request.CreateResponse(HttpStatusCode.Created, lotDto);
             return response;
@@ -62,9 +65,12 @@ namespace InternetAuction.WEB.Controllers
         [Route("api/lots/{lotId}")]
         public HttpResponseMessage ChangeLot([FromUri]int lotId, [FromBody]LotDto lotDto)
         {
+            if (lotDto == null || !ModelState.IsValid)
+                return Request.CreateResponse(HttpStatusCode.BadRequest, "Data is not full");
             lotDto.Id = lotId;
             var validResult = EditingValidator.Validate(lotDto);
-            if (!validResult.IsValid) return Request.CreateResponse(HttpStatusCode.BadRequest, validResult.Errors);
+            if (!validResult.IsValid)
+                return Request.CreateResponse(HttpStatusCode.BadRequest, validResult.Errors);
             Service.EditLot(lotDto);
             return Request.CreateResponse(HttpStatusCode.OK);
         }

@@ -11,8 +11,8 @@ namespace InternetAuction.BLL.Infrastructure
         public LotValidator(IUnitOfWork database)
         {
             Database = database;
-            RuleFor(lot => lot.Name).Length(3, 80);
-            RuleFor(lot => lot.Description).Length(0, 1500);
+            RuleFor(lot => lot.Name).NotNull().Length(3, 200);
+            RuleFor(lot => lot.Description).NotNull().Length(0, 1000);
             RuleFor(lot => lot).Must(HaveDuration).WithMessage("Finish Time less then Start Time");
             RuleFor(lot => lot.StartPrice).GreaterThan(0);
             RuleFor(lot => lot.CategoryId).Must(HaveExistingCategory).WithMessage("No category exists with such id");

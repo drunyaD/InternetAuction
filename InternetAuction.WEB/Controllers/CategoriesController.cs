@@ -13,6 +13,7 @@ namespace InternetAuction.WEB.Controllers
         private IAuctionService Service { get; }
         private ICategoryValidator CreationValidator { get; }
         private ICategoryEditValidator EditingValidator { get; }
+
         public CategoriesController(IAuctionService service, 
             ICategoryValidator creationV, ICategoryEditValidator editingV)
         {
@@ -45,20 +46,28 @@ namespace InternetAuction.WEB.Controllers
         [Authorize(Roles ="administrator, moderator")]
         [HttpPost]
         public HttpResponseMessage CreateCategory([FromBody]CategoryDto categoryDto)
-        {       
+        {
+            if (categoryDto == null || !ModelState.IsValid)
+                return Request.CreateResponse(HttpStatusCode.BadRequest, "Data is not full");
             var validResult = CreationValidator.Validate(categoryDto);
-            if (!validResult.IsValid) return Request.CreateResponse(HttpStatusCode.BadRequest, validResult.Errors);
+            if (!validResult.IsValid)
+                return Request.CreateResponse(HttpStatusCode.BadRequest, validResult.Errors);
             Service.CreateCategory(categoryDto);
             var response = Request.CreateResponse(HttpStatusCode.Created, categoryDto);
             return response;       
         }
         [Authorize(Roles ="administrator, moderator")]
         [HttpPut]
-        public HttpResponseMessage ChangeCategory([FromBody]CategoryDto categoryDto)
+        [Route("api/categories/{categoryId}")]
+        public HttpResponseMessage ChangeCategory([FromUri] int categoryId, 
+                                                  [FromBody]CategoryDto categoryDto)
         {
-
+            if (categoryDto == null || !ModelState.IsValid)
+                return Request.CreateResponse(HttpStatusCode.BadRequest, "Data is not full");
+            categoryDto.Id = categoryId;
             var validResult = EditingValidator.Validate(categoryDto);
-            if (!validResult.IsValid) return Request.CreateResponse(HttpStatusCode.BadRequest, validResult.Errors);
+            if (!validResult.IsValid)
+                return Request.CreateResponse(HttpStatusCode.BadRequest, validResult.Errors);
             Service.EditCategory(categoryDto);
             return Request.CreateResponse(HttpStatusCode.OK);
             

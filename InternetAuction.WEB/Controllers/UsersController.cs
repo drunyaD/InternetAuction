@@ -47,7 +47,7 @@ namespace InternetAuction.WEB.Controllers
                 }, claim);
                 return Request.CreateResponse(HttpStatusCode.OK);
             }
-            return Request.CreateResponse(HttpStatusCode.BadRequest);
+            return Request.CreateResponse(HttpStatusCode.BadRequest, "Data is not full");
         }
         
         [System.Web.Http.Route("api/authentication")]

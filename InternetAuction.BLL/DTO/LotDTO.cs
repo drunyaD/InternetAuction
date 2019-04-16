@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace InternetAuction.BLL.DTO
 {
@@ -12,13 +13,13 @@ namespace InternetAuction.BLL.DTO
         }
 
         public int Id { get; set; }
-        public string Name { get; set; }
-        public string Description { get; set; }
+        [Required] public string Name { get; set; }
+        [Required] public string Description { get; set; }
         public DateTime StartTime { get; set; }
-        public DateTime FinishTime { get; set; }
-        public int StartPrice { get; set; }
+        [Required] public DateTime FinishTime { get; set; }
+        [Required] public int StartPrice { get; set; }
         public string OwnerName { get; set; }
-        public int CategoryId { get; set; }
+        [Required] public int CategoryId { get; set; }
         public ICollection<ImageDto> Images { get; set; }
         public ICollection<BetDto> Bets { get; set; }
     }

@@ -48,10 +48,13 @@ namespace InternetAuction.WEB.Controllers
         [MethodImpl(MethodImplOptions.Synchronized)]
         public HttpResponseMessage CreateBet([FromBody]BetDto betDto)
         {
+            if (betDto == null || !ModelState.IsValid)
+                return Request.CreateResponse(HttpStatusCode.BadRequest, "Data is not full");
             betDto.UserName = HttpContext.Current.User.Identity.Name;
             betDto.PlacingTime = DateTime.Now;
             var validResult = Validator.Validate(betDto);
-            if (!validResult.IsValid) return Request.CreateResponse(HttpStatusCode.BadRequest, validResult.Errors);
+            if (!validResult.IsValid)
+                return Request.CreateResponse(HttpStatusCode.BadRequest, validResult.Errors);
             Service.CreateBet(betDto);
             return Request.CreateResponse(HttpStatusCode.Created, betDto);
         }
